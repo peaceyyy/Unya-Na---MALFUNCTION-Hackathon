@@ -10,6 +10,7 @@ import LoginPage from '../features/auth/LoginPage';
 import AvoidantButton from '../features/avoidant-button/AvoidantButton';
 import UnnecessaryVoid from '../features/extras/UnnecessaryVoid';
 import { usePower } from './context/PowerContext';
+import { preloadPoseDetector } from '../features/dance/poseDetector';
 
 function readHashAppId() {
   const raw = window.location.hash.replace(/^#\/?/, '').trim();
@@ -41,6 +42,11 @@ export default function App() {
   useEffect(() => {
     setPowerEnabled(authStage === 'authenticated');
   }, [authStage, setPowerEnabled]);
+
+  // Warm up the dance pose model in the background, so the dance screen opens quickly.
+  useEffect(() => {
+    if (authStage === 'authenticated') preloadPoseDetector();
+  }, [authStage]);
 
   const handleAuthenticated = () => {
     try {

@@ -36,3 +36,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 openspec
 impeccable
 .codex
+# reels server (Python): login session, credentials, virtualenv, local test videos
+reels-server/session.json
+reels-server/.env
+reels-server/.venv/
+reels-server/__pycache__/
+reels-server/mock_videos/

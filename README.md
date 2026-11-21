@@ -16,8 +16,10 @@ Code: `src/app/layout/DashboardLayout.jsx`, `src/features/extras/UnnecessaryVoid
 A button in the top bar. Pressing it opens the camera and a dance screen. Dancing with your upper
 body (arms and shoulders, no legs needed) raises the interface opacity by 20% each time the app
 detects a dance. Pressing the button does not change the opacity by itself.
-- Pose tracking runs in the browser with TensorFlow.js (MoveNet). Nothing is uploaded; the model
-  downloads on first use.
+- Pose tracking runs in the browser with TensorFlow.js (MoveNet). Nothing is uploaded.
+- The model is loaded in the background as soon as you sign in (download, GPU setup and one warm-up
+  frame), and a copy is kept in the browser's storage, so the dance screen opens quickly and later
+  visits do not download it again. It is skipped if the browser has "data saver" on.
 - It counts as a dance when the arms travel at least one shoulder-width per second and change
   direction at least three times within two seconds. Standing still, one big sweep, or slow
   drifting does not count.
@@ -61,6 +63,29 @@ and he tells you how many days are left until Christmas, written in Nahuatl, the
 (counted in twenties, as the Aztecs did), along with the Aztec day name Christmas falls on. The
 Nahuatl numerals were written from memory, so they have not been checked by a speaker.
 Code: `src/features/calendar/AztecCalendar.jsx`, image in `public/jose-mari-chan.png`.
+
+### Doomscroll: Subway Surfers or Instagram reels
+The lock button in the bottom-right corner opens a small vertical video player. A switch in its
+top-left corner picks what to watch: **Subway** (the looping Subway Surfers clip) or **Reels**.
+Reels mode plays Instagram reels and moves to the next one every 15 seconds, whatever the reel's
+own length. Hover the player for previous, pause, next and mute. The choice is remembered.
+
+Both the video corner and the assistant can be dragged anywhere on the screen: drag the "Lock In"
+and "Need help?" buttons, the thin strip at the top of the video player, or the assistant's header.
+They stay on screen, remember where you put them, and double-clicking the strip or header puts them
+back in their corner. Code: `src/app/hooks/useMovable.js`.
+
+While you scroll reels, the lazy assistant also comments on them: about every second or third reel
+it reacts in its tired voice, as a pop-up next to the "Need help?" button, or in the chat if that is
+open. It cannot see video (it is a small text model), so it reacts to what Instagram provides as
+text: the account name, the caption, Instagram's automatic description when a post has one, and the
+sound's name.
+
+Reels come from a small Python server that you run yourself (`reels-server/`), because a browser
+cannot read Instagram directly. It uses instagrapi with a spare Instagram account, which Instagram's
+terms do not allow, so read `reels-server/README.md` before using it. Without the server running, the
+Reels tab shows how to start it. Code: `src/features/extras/Doomscroll.jsx`,
+`src/features/extras/ReelsPlayer.jsx`, `reels-server/app.py`.
 
 ## Project Structure
 

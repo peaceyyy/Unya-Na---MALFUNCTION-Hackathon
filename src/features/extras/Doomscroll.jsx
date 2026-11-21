@@ -1,7 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReelsPlayer from './ReelsPlayer';
+import { useMovable } from '../../app/hooks/useMovable';
+
+const MODE_KEY = 'unproductive_doomscroll_mode';
+const MODES = [
+  { id: 'subway', label: 'Subway' },
+  { id: 'reels', label: 'Reels' },
+];
+
+function readMode() {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'reels' ? 'reels' : 'subway';
+  } catch {
+    return 'subway';
+  }
+}
 
 export default function Doomscroll() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState(readMode);
+  const move = useMovable('unproductive_pos_doomscroll');
   const tooltipRef = useRef(null);
 
   // Close on Escape key press
@@ -30,6 +48,15 @@ export default function Doomscroll() {
     };
   }, []);
 
+  const chooseMode = (id) => {
+    setMode(id);
+    try {
+      localStorage.setItem(MODE_KEY, id);
+    } catch {
+      // not remembering the choice is fine
+    }
+  };
+
   const handleClose = (e) => {
     e.stopPropagation();
     setIsOpen(false);
@@ -37,10 +64,11 @@ export default function Doomscroll() {
 
   return (
     <aside
+      ref={move.ref}
       aria-label="Doomscroll Corner"
-      className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-end select-none pointer-events-auto transition-all duration-300 ${
-        isOpen ? 'z-[60]' : 'z-40'
-      }`}
+      className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-end select-none pointer-events-auto ${
+        move.dragging ? '' : 'transition-all duration-300'
+      } ${isOpen ? 'z-[60]' : 'z-40'}`}
     >
       {/* Pure Edge-to-Edge Looping Vertical Video (9:16 Aspect Ratio, No Borders) */}
       <div
@@ -55,20 +83,55 @@ export default function Doomscroll() {
       >
         {isOpen && (
           <>
-            <iframe
-              className="h-full w-full border-0 block"
-              src="https://www.youtube.com/embed/zZ7AimPACzc?playlist=zZ7AimPACzc&loop=1&autoplay=1&rel=0"
-              title="Doomscroll Looping Vertical Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
+            {/* Drag the whole corner by this strip; double-click it to put the corner back */}
+            <div
+              data-drag-handle=""
+              title="Drag to move. Double-click to put it back."
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 z-[5] flex h-11 cursor-grab touch-none items-start justify-center pt-1.5 active:cursor-grabbing"
+            >
+              <span className="h-1 w-8 rounded-full bg-white/60" />
+            </div>
+
+            {mode === 'reels' ? (
+              <ReelsPlayer />
+            ) : (
+              <iframe
+                className="h-full w-full border-0 block"
+                src="https://www.youtube.com/embed/zZ7AimPACzc?playlist=zZ7AimPACzc&loop=1&autoplay=1&rel=0"
+                title="Doomscroll Looping Vertical Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            )}
+
+            {/* Pick what to doomscroll: always visible, top left */}
+            <div
+              role="group"
+              aria-label="What to doomscroll"
+              className="absolute left-2.5 top-2.5 z-10 flex rounded-full bg-black/55 p-0.5 backdrop-blur-md"
+            >
+              {MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={mode === m.id}
+                  onClick={() => chooseMode(m.id)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                    mode === m.id ? 'bg-white text-slate-900' : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
 
             {/* Subtle floating close button visible on hover */}
             <button
               type="button"
               onClick={handleClose}
               aria-label="Close doomscroll"
-              className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white/90 hover:bg-black/80 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute top-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white/90 hover:bg-black/80 hover:text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <svg
                 className="h-3.5 w-3.5"
@@ -89,7 +152,7 @@ export default function Doomscroll() {
       </div>
 
       {/* Floating Sakuga Tooltip Trigger Button */}
-      <div className="relative flex items-center justify-center">
+      <div data-drag-handle="interactive" className="relative flex items-center justify-center">
         <sakuga-tooltip
           ref={tooltipRef}
           text="Lock In"
