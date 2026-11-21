@@ -1,33 +1,78 @@
 import React from 'react';
 import styles from './WidgetCard.module.css';
 
-export default function WidgetCard({ title, category, className = '', children }) {
-  return (
-    <article
-      className={`group flex flex-col rounded-2xl border border-slate-200/90 bg-white p-5 transition-all duration-200 hover:border-[#1752F0]/35 hover:shadow-md hover:shadow-slate-200/50 ${styles.card} ${className}`}
-    >
-      {/* Professional Header */}
-      {(title || category) && (
-        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 select-none">
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#1752F0] opacity-80" />
-            {title && (
-              <h3 className="text-xs font-bold tracking-tight text-slate-900">
-                {title}
-              </h3>
-            )}
-          </div>
+const TONE_BADGE = {
+  blue: 'bg-accent/10 text-accent',
+  indigo: 'bg-accent-indigo/10 text-accent-indigo',
+  violet: 'bg-accent-violet/10 text-accent-violet',
+};
 
+const TONE_ICON = {
+  blue: 'bg-accent text-white',
+  indigo: 'bg-accent-indigo text-white',
+  violet: 'bg-accent-violet text-white',
+};
+
+export default function WidgetCard({
+  id,
+  title,
+  tagline,
+  category,
+  tone = 'blue',
+  isReady = false,
+}) {
+  const badgeClass = TONE_BADGE[tone] || TONE_BADGE.blue;
+  const iconClass = TONE_ICON[tone] || TONE_ICON.blue;
+  const monogram = title
+    .split(' ')
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <a
+      href={`#${id}`}
+      className={`group flex h-[280px] w-[264px] shrink-0 flex-col justify-between rounded-2xl border border-border bg-surface p-6 transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${styles.card}`}
+    >
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div
+            className={`flex h-11 w-11 items-center justify-center rounded-lg font-display text-sm font-bold ${iconClass}`}
+            aria-hidden="true"
+          >
+            {monogram}
+          </div>
           {category && (
-            <span className="rounded-md border border-[#1752F0]/20 bg-[#1752F0]/5 px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase text-[#1752F0]">
+            <span
+              className={`rounded-md px-2 py-0.5 text-xs font-medium ${badgeClass}`}
+            >
               {category}
             </span>
           )}
         </div>
-      )}
 
-      {/* Body */}
-      <div className="flex-1 w-full flex flex-col">{children}</div>
-    </article>
+        <div className="space-y-1.5">
+          <h3 className="font-display text-lg font-bold leading-snug text-ink">
+            {title}
+          </h3>
+          <p className="text-sm leading-relaxed text-ink-secondary">
+            {tagline}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border pt-4 text-xs font-medium">
+        <span className="text-ink-muted">
+          {isReady ? 'Open app' : 'Coming soon'}
+        </span>
+        <span
+          className="text-accent transition-transform duration-150 group-hover:translate-x-0.5"
+          aria-hidden="true"
+        >
+          →
+        </span>
+      </div>
+    </a>
   );
 }

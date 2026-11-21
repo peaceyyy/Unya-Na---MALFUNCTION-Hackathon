@@ -8,7 +8,7 @@
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(23, 82, 240, 0.25) transparent;
+  scrollbar-color: var(--color-border-strong) transparent;
 }
 
 .scrollContainer::-webkit-scrollbar {
@@ -20,11 +20,11 @@
 }
 
 .scrollContainer::-webkit-scrollbar-thumb {
-  background: rgba(23, 82, 240, 0.2);
+  background: var(--color-border-strong);
   border-radius: 9999px;
   transition: background 0.15s ease;
 }
 
 .scrollContainer::-webkit-scrollbar-thumb:hover {
-  background: #1752f0;
+  background: var(--color-accent);
 }
