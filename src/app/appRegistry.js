@@ -1,6 +1,9 @@
 import AztecCalendar from '../features/calendar/AztecCalendar';
 import AutocorrectNotepad from '../features/notepad/AutocorrectNotepad';
 import Clock from '../features/clock/Clock.jsx';
+import BinaryCalculator from '../features/extras/BinaryCalculator';
+import ReversePomodoro from '../features/pomodoro/ReversePomodoro';
+import ReverseEisenhower from '../features/tasks/ReverseEisenhower';
 
 // Central launcher registry for Unya na home screen cards.
 // Teammates implement their components in src/features/* on their branches;
@@ -33,7 +36,7 @@ export const APP_REGISTRY = [
     category: 'Tasks',
     tone: 'indigo',
     featurePath: 'src/features/tasks/ReverseEisenhower.jsx',
-    component: null,
+    component: ReverseEisenhower,
   },
   {
     id: 'reverse-pomodoro',
@@ -42,7 +45,7 @@ export const APP_REGISTRY = [
     category: 'Focus',
     tone: 'violet',
     featurePath: 'src/features/pomodoro/ReversePomodoro.jsx',
-    component: null,
+    component: ReversePomodoro,
   },
   {
     id: 'binary-calculator',
@@ -51,7 +54,7 @@ export const APP_REGISTRY = [
     category: 'Utility',
     tone: 'blue',
     featurePath: 'src/features/extras/BinaryCalculator.jsx',
-    component: null,
+    component: BinaryCalculator,
   },
   {
     id: 'delayed-alarm',

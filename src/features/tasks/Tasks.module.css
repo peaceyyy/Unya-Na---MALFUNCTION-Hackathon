@@ -1,0 +1,62 @@
+/* Among Us "Dead Body Reported" style center-screen cut-in */
+@keyframes cutInSlam {
+  0% {
+    transform: scaleY(0.15) scaleX(1.25);
+    opacity: 0;
+  }
+  25% {
+    transform: scaleY(1.08) scaleX(0.98);
+    opacity: 1;
+  }
+  45% {
+    transform: scaleY(0.97) scaleX(1.01) translateX(-4px);
+  }
+  65% {
+    transform: scaleY(1.02) scaleX(1) translateX(4px);
+  }
+  85% {
+    transform: scaleY(1) scaleX(1) translateX(-2px);
+  }
+  100% {
+    transform: scale(1) translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes speedLinesShift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 240px 0;
+  }
+}
+
+.cutInBand {
+  animation: cutInSlam 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.speedLines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.55) 0px,
+    rgba(255, 255, 255, 0.55) 4px,
+    transparent 4px,
+    transparent 14px,
+    rgba(255, 255, 255, 0.35) 14px,
+    rgba(255, 255, 255, 0.35) 18px,
+    transparent 18px,
+    transparent 30px
+  );
+  animation: speedLinesShift 0.5s linear infinite;
+}
+
+.reportedTitle {
+  color: #dc2626;
+  -webkit-text-stroke: 2.5px #ffffff;
+  paint-order: stroke fill;
+  text-shadow:
+    0 4px 0 rgba(127, 29, 29, 0.45),
+    0 0 24px rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.06em;
+}
