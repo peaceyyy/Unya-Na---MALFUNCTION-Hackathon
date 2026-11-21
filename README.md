@@ -41,7 +41,7 @@ While you are signed in, the power is cut at random. The utility is Meralco or V
 random each time.
 1. The power stays on for a random 1 to 2 minutes.
 2. The utility posts an advisory with a countdown 30 seconds before the cut.
-3. The power goes out for 30 seconds. The app is forced into flashlight view and the light switch
+3. The power goes out for 15 seconds. The app is forced into flashlight view and the light switch
    is locked, so you cannot go back to daylight until the power returns.
 4. When the power returns, the view you had before the cut comes back and the cycle starts again.
 
