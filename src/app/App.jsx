@@ -5,6 +5,7 @@ import { APP_REGISTRY, getAppById } from './appRegistry';
 import YesterdayWeather from '../features/extras/YesterdayWeather';
 import DemotivationalQuote from '../features/quotes/DemotivationalQuote';
 import RatingModalManager from '../features/rating/RatingModal';
+import LoginGate from '../features/captcha/LogicGate';
 import LoginPage from '../features/auth/LoginPage';
 
 function readHashAppId() {
@@ -13,29 +14,16 @@ function readHashAppId() {
 }
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  // Authentication stages: 'login' | 'captcha' | 'authenticated'
+  const [authStage, setAuthStage] = useState(() => {
     try {
-      return localStorage.getItem('unproductive_auth') === 'true';
+      return sessionStorage.getItem('unproductive_auth') === 'true' ? 'authenticated' : 'login';
     } catch {
-      return false;
+      return 'login';
     }
   });
   const [activeAppId, setActiveAppId] = useState(readHashAppId);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    try {
-      localStorage.setItem('unproductive_auth', 'true');
-    } catch {}
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    try {
-      localStorage.removeItem('unproductive_auth');
-    } catch {}
-  };
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -45,11 +33,30 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const activeApp = activeAppId ? getAppById(activeAppId) : null;
+  const handleAuthenticated = () => {
+    try {
+      sessionStorage.setItem('unproductive_auth', 'true');
+    } catch {}
+    setAuthStage('authenticated');
+  };
 
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />;
+  const handleLogout = () => {
+    try {
+      sessionStorage.removeItem('unproductive_auth');
+      localStorage.removeItem('unproductive_auth');
+    } catch {}
+    setAuthStage('login');
+  };
+
+  if (authStage === 'login') {
+    return <LoginPage onLogin={() => setAuthStage('captcha')} />;
   }
+
+  if (authStage === 'captcha') {
+    return <LoginGate onLogin={handleAuthenticated} onBack={() => setAuthStage('login')} />;
+  }
+
+  const activeApp = activeAppId ? getAppById(activeAppId) : null;
 
   if (activeApp) {
     const FeatureComponent = activeApp.component;

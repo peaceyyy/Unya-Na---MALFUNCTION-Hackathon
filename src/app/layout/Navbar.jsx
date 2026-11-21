@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import SakugaSlider from '../components/SakugaSlider';
 import LightSwitch from '../components/LightSwitch';
+import JustDanceButton from '../../features/dance/JustDanceButton';
 
 function formatDuration(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
@@ -90,6 +91,7 @@ export default function Navbar({ onLogout }) {
 
       {/* Right: Tactile Physical Light Switch & Status */}
       <div className="flex items-center gap-3">
+        <JustDanceButton />
         <div
           className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary"
           title={isFlashlight ? 'Room lights are OFF (Flashlight active)' : 'Room lights are ON (Daylight view)'}
@@ -133,7 +135,7 @@ export default function Navbar({ onLogout }) {
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            <span className="hidden md:inline">Log out</span>
+            <span className="hidden sm:inline">Log out</span>
           </button>
         )}
       </div>

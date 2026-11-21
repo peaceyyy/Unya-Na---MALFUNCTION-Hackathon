@@ -1,4 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import SakugaSlider from '../../app/components/SakugaSlider';
+import SakugaToggle from '../../app/components/SakugaToggle';
+import SakugaButton from '../../app/components/SakugaButton';
+import SakugaInput from '../../app/components/SakugaInput';
+import SakugaTextarea from '../../app/components/SakugaTextarea';
+import { loadSakuga } from '../../app/components/sakugaLoader';
 import styles from './AztecCalendar.module.css';
 
 const SIGNS = [
@@ -176,9 +182,14 @@ function JoseMariChan({ todayN }) {
 }
 
 export default function AztecCalendar() {
+  useEffect(() => {
+    loadSakuga('slider', 'toggle', 'button', 'input', 'textarea');
+  }, []);
+
   const [today] = useState(todayCount);
   const [day, setDay] = useState(today);
   const [notes, setNotes] = useState(loadNotes);
+  const saveBtn = useRef(null);
   const outerRef = useRef(null);
   const innerRef = useRef(null);
 
@@ -188,7 +199,7 @@ export default function AztecCalendar() {
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.target.closest?.('textarea, input')) return;
+      if (e.composedPath().some((n) => ['INPUT', 'TEXTAREA', 'SAKUGA-INPUT', 'SAKUGA-TEXTAREA'].includes(n.tagName))) return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       let move = 0;
       if (e.key === 'ArrowRight') move = stepDays(1, 0);
@@ -322,6 +333,34 @@ export default function AztecCalendar() {
           <text y="78" className={styles.cMeta}>DAY {a.pos} OF 260</text>
         </svg>
 
+        <div className="flex flex-wrap items-start justify-center gap-x-8 gap-y-2">
+          <div className="flex flex-col items-center">
+            <SakugaSlider
+              value={a.pos}
+              min={1}
+              max={260}
+              unit=""
+              scale={0.8}
+              smoke={false}
+              label="Day of the count"
+              title={`Day ${a.pos} of 260`}
+            />
+            <span className="mt-6 text-xs font-medium uppercase tracking-widest text-ink-muted">Count of 260</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <SakugaSlider
+              value={a.mday}
+              min={1}
+              max={a.month === 18 ? 5 : 20}
+              unit=""
+              scale={0.8}
+              smoke={false}
+              label="Day of the solar month"
+              title={`Day ${a.mday} of ${a.month === 18 ? 5 : 20}`}
+            />
+            <span className="mt-6 text-xs font-medium uppercase tracking-widest text-ink-muted">Solar month</span>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-ink-secondary">
           <span className="inline-flex items-center gap-2">
             <Key>←</Key><Key>→</Key> turn the signs
@@ -330,13 +369,9 @@ export default function AztecCalendar() {
             <Key>↑</Key><Key>↓</Key> turn the numbers
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setDay(today)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-ink-secondary outline-none focus:outline-none focus-visible:outline-none"
-        >
+        <SakugaButton variant="secondary" onClick={() => setDay(today)}>
           Today
-        </button>
+        </SakugaButton>
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-ink-muted" aria-label="Direction colours">
           {DIRS.map((d, i) => (
             <li key={d} className="inline-flex items-center gap-1.5">
@@ -374,49 +409,48 @@ export default function AztecCalendar() {
 
         <div className="space-y-3">
           <div>
-            <label htmlFor="aztec-name" className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-ink-muted">
-              {unlocked ? 'Day name accepted' : 'Write the day name to unlock a note'}
-            </label>
-            <input
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label htmlFor="aztec-name" className="block text-xs font-medium uppercase tracking-widest text-ink-muted">
+                {unlocked ? 'Day name accepted' : 'Write the day name to unlock a note'}
+              </label>
+              <SakugaToggle checked={unlocked} label={unlocked ? 'Note unlocked' : 'Note locked'} />
+            </div>
+            <SakugaInput
               id="aztec-name"
-              type="text"
+              label="Day name in Nahuatl"
               value={unlocked ? answer : typedText}
-              onChange={(e) => onTyped(e.target.value)}
-              readOnly={unlocked}
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
+              onInput={onTyped}
+              disabled={unlocked}
               placeholder="Number and sign, in Nahuatl"
-              className="w-full rounded-xl border border-border bg-canvas px-3.5 py-2.5 text-base text-ink placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent read-only:text-accent"
             />
           </div>
           <div>
             <label htmlFor="aztec-note" className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-ink-muted">
               Note for this day
             </label>
-            <textarea
+            <SakugaTextarea
               id="aztec-note"
+              label="Note for this day"
+              rows={5}
               value={note}
-              onChange={(e) => setDraft({ day, text: e.target.value })}
+              onInput={(text) => setDraft({ day, text })}
               disabled={!unlocked}
-              data-gramm="false"
-              data-gramm_editor="false"
-              data-enable-grammarly="false"
               placeholder={unlocked ? 'Write a deadline here. Finding this day again is up to you.' : 'Locked until the day name above is written.'}
-              className="h-36 w-full resize-none rounded-xl border border-border bg-canvas px-3.5 py-3 text-base leading-relaxed text-ink placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
             />
           </div>
         </div>
 
         <div className="flex items-end justify-between gap-4">
-          <button
-            type="button"
-            onClick={saveNote}
+          <SakugaButton
+            ref={saveBtn}
+            onClick={() => {
+              saveNote();
+              saveBtn.current?.done();
+            }}
             disabled={!unlocked || !dirty}
-            className="inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:bg-surface-subtle disabled:text-ink-muted"
           >
             {unlocked && !dirty && saved ? 'Saved' : 'Save note'}
-          </button>
+          </SakugaButton>
           <JoseMariChan todayN={today} />
         </div>
       </section>

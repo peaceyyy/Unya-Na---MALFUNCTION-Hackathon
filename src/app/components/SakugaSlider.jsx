@@ -5,28 +5,31 @@ export default function SakugaSlider({
   disabled = false,
   readOnly = true,
   label = 'Interface opacity indicator',
+  min = 0,
+  max = 100,
+  unit = '%',
+  scale = 0.68,
+  smoke = true,
+  title,
 }) {
   const ref = useRef(null);
 
-  // Sync value from props to custom element
+  // Properties are only safe to set once the element is upgraded. Set earlier,
+  // they become plain fields that shadow the component's own accessors.
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-
-    const numericVal = Math.round(Number(value));
-    if (Number(el.value) !== numericVal) {
-      el.value = numericVal;
-    }
-  }, [value]);
-
-  // Sync disabled state
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (disabled !== undefined) {
+    if (!el) return undefined;
+    let live = true;
+    customElements.whenDefined('sakuga-slider').then(() => {
+      if (!live) return;
+      const numericVal = Math.round(Number(value));
+      if (Number(el.value) !== numericVal) el.value = numericVal;
       el.disabled = disabled;
-    }
-  }, [disabled]);
+    });
+    return () => {
+      live = false;
+    };
+  }, [value, disabled]);
 
   return (
     <div
@@ -38,22 +41,23 @@ export default function SakugaSlider({
         '--sk-pri': '#2563eb',
         '--sk-acc': '#2563eb',
       }}
-      title={`Interface opacity: ${Math.round(Number(value))}%`}
+      title={title ?? `Interface opacity: ${Math.round(Number(value))}%`}
       aria-hidden="true"
     >
       <sakuga-slider
         ref={ref}
-        min="0"
-        max="100"
+        min={min}
+        max={max}
         step="1"
         value={value}
-        unit="%"
+        unit={unit}
         bubble="bottom"
         readonly={readOnly ? '' : undefined}
+        nosmoke={smoke ? undefined : ''}
         label={label}
         style={{
           margin: 0,
-          transform: 'scale(0.68)',
+          transform: `scale(${scale})`,
           transformOrigin: 'center center',
           display: 'block',
           pointerEvents: 'none',
