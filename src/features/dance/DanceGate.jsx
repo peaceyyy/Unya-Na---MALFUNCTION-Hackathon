@@ -176,6 +176,7 @@ export default function DanceGate({ opacity, stopAt, step, onDance, onDone }) {
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   const failed = phase === 'blocked' || phase === 'error';
   const canStop = opacity >= stopAt;
+  const [fadedAway] = useState(opacity === 0); // opened because the interface faded out, or by the button?
   const message = failed ? errorText : STATUS_TEXT[status] || '';
 
   return (
@@ -188,11 +189,11 @@ export default function DanceGate({ opacity, stopAt, step, onDance, onDone }) {
       <div className="mx-4 w-full max-w-md space-y-4 rounded-2xl border border-border bg-surface p-6 shadow-lg">
         <div className="space-y-1 text-center">
           <h2 className="font-display text-xl font-bold text-ink">
-            Unya na… everything faded away.
+            {fadedAway ? 'Unya na… everything faded away.' : 'Just dance'}
           </h2>
           <p className="text-sm text-ink-secondary">
-            Dance with your upper body to bring it back. Arms, shoulders, anything. Each dance
-            wins back {step}%. You can keep going all the way to 100%.
+            Dance with your upper body to {fadedAway ? 'bring it back' : 'turn the opacity up'}. Arms,
+            shoulders, anything. Each dance wins back {step}%. You can keep going all the way to 100%.
           </p>
         </div>
 
