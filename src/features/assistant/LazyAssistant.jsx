@@ -3,7 +3,9 @@ import { APP_REGISTRY } from '../../app/appRegistry';
 import SakugaButton from '../../app/components/SakugaButton';
 import SakugaInput from '../../app/components/SakugaInput';
 import { loadSakuga } from '../../app/components/sakugaLoader';
-import { topicHint, guardReply } from './topicHint';
+import { topicHint, guardReply, reelCommentHint, guardReelComment } from './topicHint';
+import { onReelEvent } from '../extras/reelsBus';
+import { useMovable } from '../../app/hooks/useMovable';
 
 // I used because of 4gb vram
 const MODEL = 'llama3.2:3b';
@@ -86,23 +88,79 @@ async function* streamReply(history, signal) {
   }
 }
 
+// ---- watching reels ----
+
+const MAX_MESSAGES = 60;
+const PEEK_MS = 8000; // how long the pop-up next to the launcher stays
+
+// One short, non-streamed comment about the reel that is on screen.
+async function askForComment(reel, recentComments, signal) {
+  let response;
+  try {
+    response = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        model: MODEL,
+        stream: false,
+        messages: [
+          { role: 'system', content: [SYSTEM_PROMPT, reelCommentHint(reel, recentComments)].join(' ') },
+          { role: 'user', content: 'what do you think of this reel?' },
+        ],
+        options: { temperature: 0.8, num_predict: 60 },
+      }),
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    throw { kind: 'unreachable' };
+  }
+  if (!response.ok) throw { kind: response.status === 404 ? 'missing-model' : 'unreachable' };
+  const data = await response.json();
+  return data.message?.content || '';
+}
+
+const toModel = (list) => list.map(({ role, content }) => ({ role, content }));
+
 export default function LazyAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [peek, setPeek] = useState(null);
+  const [peekSide, setPeekSide] = useState('left'); // which side of the launcher the pop-up sits on
+  const move = useMovable('unproductive_pos_assistant');
   const launcherRef = useRef(null);
+  const launcherBoxRef = useRef(null);
   const inputRef = useRef(null);
   const logRef = useRef(null);
   const abortRef = useRef(null);
+
+  // Latest values for the reel listener, which is set up once.
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
+  const openRef = useRef(open);
+  openRef.current = open;
+  const idCounter = useRef(0);
+  const newId = () => {
+    idCounter.current += 1;
+    return idCounter.current;
+  };
+  const peekTimer = useRef(0);
+  const reel = useRef({ active: false, since: 0, gap: 1, generating: false, abort: null, failures: 0 });
 
   useEffect(() => {
     loadSakuga('button', 'input');
   }, []);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (open) {
+      inputRef.current?.focus();
+      setPeek(null);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -110,7 +168,68 @@ export default function LazyAssistant() {
     if (log) log.scrollTop = log.scrollHeight;
   }, [messages, busy, error]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      reel.current.abort?.abort();
+      clearTimeout(peekTimer.current);
+    },
+    [],
+  );
+
+  // Comment on a reel now and then: about every second or third one, never while a chat reply is
+  // being written, and it goes quiet for a while if Ollama is not answering.
+  useEffect(() => {
+    async function commentOn(current) {
+      const state = reel.current;
+      state.generating = true;
+      const controller = new AbortController();
+      state.abort = controller;
+      try {
+        const recent = messagesRef.current.filter((m) => m.auto).map((m) => m.content);
+        const raw = await askForComment(current, recent, controller.signal);
+        if (!state.active) return; // they moved on while it was thinking
+        const text = guardReelComment(raw, current);
+        setMessages((list) =>
+          [...list, { id: newId(), role: 'assistant', content: text, auto: true, reelUser: current.user }].slice(-MAX_MESSAGES),
+        );
+        state.failures = 0;
+        if (!openRef.current) {
+          // Beside the launcher, on whichever side has room (it can be dragged anywhere).
+          const box = launcherBoxRef.current?.getBoundingClientRect();
+          setPeekSide(box && box.left < 300 ? 'right' : 'left');
+          setPeek(text);
+          clearTimeout(peekTimer.current);
+          peekTimer.current = setTimeout(() => setPeek(null), PEEK_MS);
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          state.failures += 1;
+          state.gap = 4 + state.failures; // Ollama is off or busy: stop pestering it
+        }
+      } finally {
+        state.generating = false;
+      }
+    }
+
+    return onReelEvent(({ type, reel: current }) => {
+      const state = reel.current;
+      if (type === 'stopped') {
+        state.active = false;
+        state.since = 0;
+        state.gap = 1; // the next time they start scrolling, react to the first reel
+        state.abort?.abort();
+        return;
+      }
+      state.active = true;
+      if (busyRef.current || state.generating) return;
+      state.since += 1;
+      if (state.since < state.gap) return;
+      state.since = 0;
+      state.gap = 2 + Math.floor(Math.random() * 2);
+      commentOn(current);
+    });
+  }, []);
 
   function close() {
     setOpen(false);
@@ -129,8 +248,11 @@ export default function LazyAssistant() {
     const text = draft.trim();
     if (!text || busy) return;
 
-    const history = [...messages, { role: 'user', content: text }];
-    setMessages([...history, { role: 'assistant', content: '' }]);
+    // Messages are updated by id, so a reel comment that arrives while a reply is being written is kept.
+    const userMessage = { id: newId(), role: 'user', content: text };
+    const placeholder = { id: newId(), role: 'assistant', content: '' };
+    const history = toModel([...messagesRef.current, userMessage]);
+    setMessages((list) => [...list, userMessage, placeholder]);
     setDraft('');
     setError(null);
     setBusy(true);
@@ -144,10 +266,11 @@ export default function LazyAssistant() {
       for await (const piece of streamReply(history.slice(-8), controller.signal)) {
         reply += piece;
       }
-      setMessages([...history, { role: 'assistant', content: guardReply(reply, history) }]);
+      const final = guardReply(reply, history);
+      setMessages((list) => list.map((m) => (m.id === placeholder.id ? { ...m, content: final } : m)));
     } catch (err) {
       if (err.name === 'AbortError') return;
-      setMessages(history);
+      setMessages((list) => list.filter((m) => m.id !== userMessage.id && m.id !== placeholder.id));
       setError(describeError(err));
       setDraft(text);
     } finally {
@@ -156,14 +279,23 @@ export default function LazyAssistant() {
   }
 
   return (
-    <div className="fixed bottom-6 right-24 z-40 flex flex-col items-end gap-3 sm:bottom-8 sm:right-28" onKeyDown={onKeyDown}>
+    <div
+      ref={move.ref}
+      className="fixed bottom-6 right-24 z-40 flex flex-col items-end gap-3 sm:bottom-8 sm:right-28"
+      onKeyDown={onKeyDown}
+    >
       {open && (
         <section
           role="dialog"
           aria-label="Assistant"
-          className="flex h-[min(30rem,calc(100vh-8rem))] w-[min(23rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-lg"
+          // Shifted left so it does not sit under the Doomscroll video player, which opens just to its right.
+          className="flex h-[min(30rem,calc(100vh-8rem))] w-[min(23rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-lg sm:mr-36"
         >
-          <header className="flex items-center justify-between gap-3 border-b border-border bg-surface-subtle px-4 py-3">
+          <header
+            data-drag-handle=""
+            title="Drag to move. Double-click to put it back."
+            className="flex cursor-grab touch-none items-center justify-between gap-2 border-b border-border bg-surface-subtle px-4 py-3 active:cursor-grabbing"
+          >
             <h2 className="font-display text-lg font-bold leading-tight text-ink">Assistant</h2>
             <button type="button" className={buttonBase} onClick={close}>
               Close
@@ -180,19 +312,24 @@ export default function LazyAssistant() {
             <p className="max-w-[85%] self-start rounded-lg bg-surface-subtle px-3 py-2 text-ink">
               {GREETING}
             </p>
-            {messages.map((m, i) =>
+            {messages.map((m) =>
               m.role === 'user' ? (
                 <p
-                  key={i}
+                  key={m.id}
                   className="max-w-[85%] self-end whitespace-pre-wrap rounded-lg bg-accent-soft px-3 py-2 text-ink"
                 >
                   {m.content}
                 </p>
               ) : (
                 <p
-                  key={i}
+                  key={m.id}
                   className="max-w-[85%] self-start whitespace-pre-wrap rounded-lg bg-surface-subtle px-3 py-2 text-ink"
                 >
+                  {m.auto && (
+                    <span className="mb-0.5 block text-[10px] font-medium uppercase tracking-wider text-ink-muted">
+                      watching reels{m.reelUser ? ` · @${m.reelUser}` : ''}
+                    </span>
+                  )}
                   {m.content || (busy ? 'uhh... wait lemmme think...' : '')}
                 </p>
               ),
@@ -227,9 +364,23 @@ export default function LazyAssistant() {
         </section>
       )}
 
-      <SakugaButton ref={launcherRef} expanded={open} onClick={() => setOpen((v) => !v)}>
-        {open ? 'Hide assistant' : 'Need help?'}
-      </SakugaButton>
+      <div ref={launcherBoxRef} data-drag-handle="interactive" className="relative">
+        {/* A reel comment, shown to the left of the launcher while the chat is closed */}
+        {!open && peek && (
+          <div role="status" aria-live="polite" className={`absolute top-1/2 w-64 -translate-y-1/2 ${peekSide === 'left' ? 'right-full mr-3' : 'left-full ml-3'}`}>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="w-full cursor-pointer rounded-2xl rounded-br-sm border border-border-strong bg-surface px-3 py-2 text-left text-sm text-ink shadow-lg transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {peek}
+            </button>
+          </div>
+        )}
+        <SakugaButton ref={launcherRef} expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? 'Hide assistant' : 'Need help?'}
+        </SakugaButton>
+      </div>
     </div>
   );
 }
