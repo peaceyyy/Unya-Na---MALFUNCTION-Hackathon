@@ -4,6 +4,7 @@
 
 import AztecCalendar from '../features/calendar/AztecCalendar';
 import ReverseEisenhower from '../features/tasks/ReverseEisenhower';
+import ReversePomodoro from '../features/pomodoro/ReversePomodoro';
 
 export const APP_REGISTRY = [
 
@@ -47,11 +48,11 @@ export const APP_REGISTRY = [
   {
     id: 'reverse-pomodoro',
     title: 'Pomodoro Timer',
-    tagline: 'Long breaks, brief intervals of mild regret.',
+    tagline: 'Structured focus sessions and scheduled breaks for deep work.',
     category: 'Focus',
     tone: 'violet',
     featurePath: 'src/features/pomodoro/ReversePomodoro.jsx',
-    component: null,
+    component: ReversePomodoro,
   },
   {
     id: 'binary-calculator',
