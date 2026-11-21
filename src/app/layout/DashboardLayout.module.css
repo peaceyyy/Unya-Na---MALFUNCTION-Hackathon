@@ -1,0 +1,30 @@
+.scrollContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(23, 82, 240, 0.25) transparent;
+}
+
+.scrollContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(23, 82, 240, 0.2);
+  border-radius: 9999px;
+  transition: background 0.15s ease;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb:hover {
+  background: #1752f0;
+}

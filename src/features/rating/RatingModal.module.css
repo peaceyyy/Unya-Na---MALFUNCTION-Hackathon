@@ -1,0 +1,60 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.modalCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: min(92vw, 400px);
+  user-select: none;
+  transition: box-shadow 0.2s ease;
+  touch-action: none;
+}
+
+.modalCard:not(.isDragging) {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.modalCard.isDragging {
+  box-shadow: 0 25px 35px -10px rgba(15, 23, 42, 0.25), 0 12px 20px -8px rgba(15, 23, 42, 0.15);
+  cursor: grabbing;
+}
+
+.modalHeader {
+  cursor: grab;
+  touch-action: none;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.35rem;
+  margin: -0.25rem -0.35rem 0.5rem -0.35rem;
+  transition: background-color 0.15s ease;
+}
+
+.modalHeader:hover {
+  background-color: #f8fafc;
+}
+
+.modalHeader:active,
+.isDragging .modalHeader {
+  cursor: grabbing;
+  background-color: #f1f5f9;
+}
+
+.starWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0;
+  --sk-pri: #1752f0;
+  --sk-card: #f8fafc;
+  --sk-ink: #0f172a;
+}
