@@ -2,6 +2,8 @@
 // Teammates implement their components in src/features/* on their branches;
 // once merged, import the component here and assign it to `component`.
 
+import AztecCalendar from '../features/calendar/AztecCalendar';
+
 export const APP_REGISTRY = [
 
     {
@@ -20,7 +22,7 @@ export const APP_REGISTRY = [
     category: 'Schedule',
     tone: 'indigo',
     featurePath: 'src/features/calendar/AztecCalendar.jsx',
-    component: null,
+    component: AztecCalendar,
   },
   {
     id: 'autocorrect-notepad',
