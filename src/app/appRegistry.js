@@ -41,8 +41,8 @@ export const APP_REGISTRY = [
   },
   {
     id: 'binary-calculator',
-    title: 'Binary Calculator',
-    tagline: 'Perform arithmetic with binary numbers.',
+    title: 'Calculator',
+    tagline: 'Perform arithmetic.',
     featurePath: 'src/features/extras/BinaryCalculator.jsx',
     component: BinaryCalculator,
   },
