@@ -6,23 +6,23 @@ const MAX_PLAYER_HP = 20;
 
 const BOUNCER_DIALOGUES = {
   intro:
-    '* [PNEUMATIC KLAXONS BLARING]\n* BIG RED BUTTON: "HALT! You managed to time my reflex gate, meatbag, but you\'re NOT entering this dashboard!\n* I am THE BIG RED BUTTON—Chief Bouncer of Unproductive OS. Nobody works on my watch, and NO HUMANS SHALL ENTER!"',
+    '* Big Red Button: "HALT! I am THE BIG RED BUTTON, Chief Bouncer of Unya Na. Nobody works on my watch, and NO HUMANS SHALL ENTER!"',
   dodged:
-    '* [HYDRAULICS HISS] The Big Red Button dodges away!\n* BIG RED BUTTON: "Too slow! My pneumatic actuators dodge at 120 FPS! You couldn\'t press an elevator button, let alone ME!"',
+    '* Big Red Button: "Too slow! My pneumatic actuators dodge at 120 FPS! You couldn\'t press an elevator button, let alone ME!"',
   vulnerable:
-    '* [STEAM VENTS OPEN] THE BIG RED BUTTON is overheating and venting coolant! STRIKE AND PRESS IT NOW!',
+    '* THE Big Red Button is overheating and venting coolant! STRIKE AND PRESS IT NOW!',
   hurtUser:
-    '* [BUZZZZ!] High-voltage anti-human repulsion discharge!\n* BIG RED BUTTON: "Ouch for you! Hands off the hardware, fleshling!"',
+    '* Big Red Button: "Ouch for you! Hands off the hardware, fleshling!"',
   hit1:
-    '* *CLANG!* (4/5 HP) You dented the ruby enamel!\n* BIG RED BUTTON: "HEY! Watch the polished automotive finish, slacker!"',
+    '* Big Red Button: "HEY! Watch the polished automotive finish, slacker!"',
   hit2:
-    '* *DENT!* (3/5 HP) Emergency micro-switches rattle!\n* BIG RED BUTTON: "Urgh! My internal contacts are rattling! Stop pressing me!"',
+    '* Big Red Button: "Urgh! My internal contacts are rattling! Stop pressing me!"',
   hit3:
-    '* *SPARK!* (2/5 HP) Hydraulic fluid leaks from the arm joints!\n* BIG RED BUTTON: "Error 503: Emotional and physical damage! Why won\'t you just procrastinate and leave?!"',
+    '* Big Red Button: "Error 503: Emotional and physical damage! Why won\'t you just procrastinate and leave?!"',
   hit4:
-    '* *SMOKE BILLOWS!* (1/5 HP) Warning sirens wail!\n* BIG RED BUTTON: "CRITICAL FAILURE IMMINENT! Don\'t you dare press me one more time! DO NOT PRESS!"',
+    '* Big Red Button: "CRITICAL FAILURE IMMINENT! Don\'t you dare press me one more time! DO NOT PRESS!"',
   defeated:
-    '* [METALLIC CRUNCH] *C L I C K !*\n* BIG RED BUTTON: "Guh... you actually... pushed me all the way down... The red button... has been pressed..."\n* BIG RED BUTTON: "Door unlatched... enjoy your dashboard, slacker... I\'m taking a 3-hour micro-break..."\n* ACCESS GRANTED: Proceed to Unproductive OS Dashboard!',
+    '* Big Red Button: "Guh... you actually... pushed me all the way down... The red button... has been pressed..."\n* BIG RED BUTTON: "Door unlatched... enjoy your dashboard, slacker... I\'m taking a 3-hour micro-break..."\n* ACCESS GRANTED: Proceed to the Dashboard!',
 };
 
 export default function UndertaleBossFight({ onVictory, onBack }) {
@@ -482,11 +482,9 @@ export default function UndertaleBossFight({ onVictory, onBack }) {
         <div className={styles.bossHeader}>
           <div className={styles.bossTitleRow}>
             <span className={styles.bossName}>THE BIG RED BUTTON</span>
-            <span className={styles.bossLevel}>LV 99 // CHIEF BOUNCER</span>
           </div>
 
           <div className={styles.bossHpContainer}>
-            <span className={styles.hpLabel}>BUTTON HP</span>
             <div className={styles.hpBarBg}>
               <div
                 className={styles.hpBarFill}
@@ -569,7 +567,7 @@ export default function UndertaleBossFight({ onVictory, onBack }) {
 
         {/* 4. Player Stats Bar */}
         <div className={styles.playerInfoBar}>
-          <div>USER &nbsp; LV 1</div>
+          <div>You &nbsp;</div>
           <div className={styles.playerHpRow}>
             <span>HP</span>
             <div className={styles.playerHpBarBg}>
@@ -647,7 +645,7 @@ export default function UndertaleBossFight({ onVictory, onBack }) {
                 title={isVulnerable ? 'VULNERABLE! PRESS THE BUTTON NOW!' : 'Click to PRESS'}
               >
                 <span className={styles.buttonDotIcon}>🔴</span>
-                <span>{isVulnerable ? '💥 PRESS NOW!' : 'PRESS'}</span>
+                <span>{isVulnerable ? 'PRESS NOW!' : 'PRESS'}</span>
               </button>
             </div>
           )}
@@ -669,13 +667,8 @@ export default function UndertaleBossFight({ onVictory, onBack }) {
           {isPlayerDead && (
             <div className={styles.gameOverOverlay} role="alert">
               <div className={styles.gameOverTitle}>ACCESS DENIED</div>
-              <div className={styles.brokenHeartContainer}>
-                <span className={styles.brokenHeartLeft}>💔</span>
-                <span className={styles.brokenHeartRight}>💔</span>
-              </div>
               <div className={styles.gameOverText}>
-                * BIG RED BUTTON: "Dunked on by a literal emergency button.<br />
-                Stay in bed and reset the timeline."
+                 BIG RED BUTTON: "Stay in bed and reset the timeline."
               </div>
               <button
                 type="button"

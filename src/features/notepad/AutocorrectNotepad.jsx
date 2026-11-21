@@ -1,29 +1,21 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  getAutocorrectSuggestion,
+  getPrefixMatchAutocorrect,
   shouldEnforceLowercaseAfterPeriod,
 } from './cursedTransformations';
 import styles from './AutocorrectNotepad.module.css';
 
-const DENIAL_SNACKBAR_QUOTES = [
-  '🚫 Suggestion rejected: Autocorrect suggestions on Unproductive OS are strictly view-only.',
-  '❌ Nice try! Google Docs Autocorrect says: you cannot choose this suggestion.',
-  '🔒 Action forbidden: Advice may be viewed, but never accepted.',
-  '⚠️ Did you really click "Accept"? Not on Unproductive OS.',
-  '😴 Unya na: Accepting suggestions takes more effort than this system allows.',
-];
-
 export default function AutocorrectNotepad() {
   const [docTitle, setDocTitle] = useState('My Highly Productive Notes');
   const [content, setContent] = useState(
-    'I have a lot of work today and my deadline is important.\nOur team meeting about the project should start now.\nWe will finish the task and study everything carefully.\n'
+    'Start your day with a word...\n'
   );
-  const [activeWordInfo, setActiveWordInfo] = useState(null);
-  const [popoverPos, setPopoverPos] = useState({ top: 120, left: 160 });
-  const [isPopoverDodge, setIsPopoverDodge] = useState(false);
-  const [isPopoverShaking, setIsPopoverShaking] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState(null);
-  const [blockedCount, setBlockedCount] = useState(0);
+  const [sabotageCount, setSabotageCount] = useState(0);
+  const [lastSabotage, setLastSabotage] = useState(null);
+  const [showFlash, setShowFlash] = useState(false);
+  const [undoBlockedNotice, setUndoBlockedNotice] = useState(false);
+
+  // Formatting state
   const [fontSize, setFontSize] = useState('11');
   const [fontFamily, setFontFamily] = useState('Arial');
   const [isBold, setIsBold] = useState(false);
@@ -32,187 +24,110 @@ export default function AutocorrectNotepad() {
   const [activeMenu, setActiveMenu] = useState(null);
 
   const textareaRef = useRef(null);
-  const mirrorRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const snackbarTimeoutRef = useRef(null);
+  const flashTimeoutRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
+  const undoTimeoutRef = useRef(null);
 
-  // Clean up on unmount
+  // Tracks the last autocorrection so Backspace can cancel and revert it
+  const lastAutocorrectRef = useRef(null);
+  // Prevents re-autocorrecting immediately if user presses space right after cancelling
+  const recentlyCancelledWordRef = useRef(null);
+
+  // Word and character counts
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const charCount = content.length;
+
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      clearTimeout(snackbarTimeoutRef.current);
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      clearTimeout(flashTimeoutRef.current);
+      clearTimeout(toastTimeoutRef.current);
+      clearTimeout(undoTimeoutRef.current);
     };
   }, []);
 
-  // Web Audio denial boop
-  const playDenialSound = useCallback(() => {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContext();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, ctx.currentTime);
-      osc.frequency.setValueAtTime(120, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.22);
-    } catch {
-      // Audio fallback
+  // Visual sabotage feedback
+  const triggerSabotageFeedback = (sabotageInfo) => {
+    if (sabotageInfo.type !== 'cancelled') {
+      setSabotageCount((prev) => prev + 1);
     }
-  }, []);
+    setLastSabotage(sabotageInfo);
+    setShowFlash(true);
 
-  // Trigger denial snackbar
-  const triggerSnackbar = (customMsg) => {
-    playDenialSound();
-    setBlockedCount((prev) => prev + 1);
-    setIsPopoverShaking(true);
-    setTimeout(() => setIsPopoverShaking(false), 400);
+    clearTimeout(flashTimeoutRef.current);
+    flashTimeoutRef.current = setTimeout(() => setShowFlash(false), 250);
 
-    const msg = customMsg || DENIAL_SNACKBAR_QUOTES[Math.floor(Math.random() * DENIAL_SNACKBAR_QUOTES.length)];
-    setSnackbarMsg(msg);
-
-    clearTimeout(snackbarTimeoutRef.current);
-    snackbarTimeoutRef.current = setTimeout(() => {
-      setSnackbarMsg(null);
-    }, 3400);
+    clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setLastSabotage(null), 2800);
   };
 
-  // Measure word coordinates using hidden mirror DOM
-  const measureWordPosition = useCallback((text, wordStartIdx, wordEndIdx) => {
-    const mirror = mirrorRef.current;
-    if (!mirror) return { top: 120, left: 160 };
+  // Blocked undo feedback
+  const triggerUndoBlockedFeedback = () => {
+    setUndoBlockedNotice(true);
+    clearTimeout(undoTimeoutRef.current);
+    undoTimeoutRef.current = setTimeout(() => setUndoBlockedNotice(false), 2400);
+  };
 
-    const beforeText = text.slice(0, wordStartIdx);
-    const targetWord = text.slice(wordStartIdx, wordEndIdx);
-
-    mirror.innerHTML = '';
-    const beforeSpan = document.createElement('span');
-    beforeSpan.textContent = beforeText;
-
-    const targetSpan = document.createElement('span');
-    targetSpan.textContent = targetWord;
-    targetSpan.id = 'measured-target-word';
-
-    mirror.appendChild(beforeSpan);
-    mirror.appendChild(targetSpan);
-
-    const spanEl = mirror.querySelector('#measured-target-word');
-    if (spanEl) {
-      const top = Math.max(80, spanEl.offsetTop + 32);
-      const left = Math.min(Math.max(40, spanEl.offsetLeft), 520);
-      return { top, left };
-    }
-    return { top: 120, left: 160 };
-  }, []);
-
-  // Detect word under cursor and calculate Google Docs autocorrect popover
-  const inspectWordAtCursor = useCallback((text, cursorPos) => {
-    if (!text || cursorPos === undefined || cursorPos === null) {
-      setActiveWordInfo(null);
-      return;
-    }
-
-    // Find word boundaries around cursorPos
-    const textBefore = text.slice(0, cursorPos);
-    const textAfter = text.slice(cursorPos);
-
-    const matchBefore = textBefore.match(/([a-zA-Z0-9'-]+)$/);
-    const matchAfter = textAfter.match(/^([a-zA-Z0-9'-]+)/);
-
-    let start = cursorPos;
-    let end = cursorPos;
-    let rawWord = '';
-
-    if (matchBefore) {
-      start = cursorPos - matchBefore[1].length;
-      rawWord += matchBefore[1];
-    }
-    if (matchAfter) {
-      end = cursorPos + matchAfter[1].length;
-      rawWord += matchAfter[1];
-    }
-
-    // If cursor was at end of word or space, fallback to previous word
-    if (!rawWord || rawWord.length < 2) {
-      const prevWordMatch = textBefore.match(/([a-zA-Z0-9'-]+)[^\w]*$/);
-      if (prevWordMatch && prevWordMatch[1] && prevWordMatch[1].length >= 2) {
-        start = textBefore.lastIndexOf(prevWordMatch[1]);
-        end = start + prevWordMatch[1].length;
-        rawWord = prevWordMatch[1];
-      }
-    }
-
-    if (rawWord && rawWord.length >= 2) {
-      const suggestionObj = getAutocorrectSuggestion(rawWord);
-      if (suggestionObj) {
-        const coords = measureWordPosition(text, start, end);
-        setPopoverPos(coords);
-        setActiveWordInfo({
-          word: rawWord,
-          suggestion: suggestionObj.suggestion,
-          reason: suggestionObj.reason,
-          start,
-          end,
-        });
-        return;
-      }
-    }
-
-    // Default fallback suggestion if nothing selected
-    const coords = measureWordPosition(text, Math.max(0, text.length - 12), text.length);
-    setPopoverPos(coords);
-    setActiveWordInfo({
-      word: 'procrastination',
-      suggestion: 'rest is the supreme virtue',
-      reason: 'Google Docs Procrastination Engine',
-      start: 0,
-      end: 0,
-    });
-  }, [measureWordPosition]);
-
-  // Initial sync
-  useEffect(() => {
-    inspectWordAtCursor(content, 26);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle key typing
+  // Handle typing interception: space, enter, or punctuation triggers in-line incorrecting!
   const handleKeyDown = (e) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
     const { selectionStart, selectionEnd, value } = textarea;
 
-    // 1. BLOCK UNDO / REDO (Ctrl+Z, Cmd+Z, Ctrl+Y)
+    // 1. BACKSPACE TO CANCEL RECENT AUTOCORRECTION
+    if (e.key === 'Backspace' && lastAutocorrectRef.current) {
+      const info = lastAutocorrectRef.current;
+      // If cursor is right after the autocorrected text (with or without trailing separator)
+      if (
+        selectionStart === selectionEnd &&
+        (selectionStart === info.autocorrectedEndIndex ||
+          selectionStart === info.autocorrectedEndIndex - info.separator.length)
+      ) {
+        e.preventDefault();
+        // Cancel autocorrection: restore the original typed word!
+        const before = value.slice(0, info.wordStartIndex);
+        const after = value.slice(info.autocorrectedEndIndex);
+        const revertedContent = before + info.originalWord + after;
+        setContent(revertedContent);
+
+        recentlyCancelledWordRef.current = info.originalWord;
+        lastAutocorrectRef.current = null;
+
+        const restoredCursorPos = info.wordStartIndex + info.originalWord.length;
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = restoredCursorPos;
+            textareaRef.current.selectionEnd = restoredCursorPos;
+          }
+        }, 0);
+
+        triggerSabotageFeedback({
+          type: 'cancelled',
+          details: `Cancelled autocorrect: restored "${info.originalWord}"`,
+        });
+        return;
+      }
+    }
+
+    // Clear cancel history if any other key is pressed
+    if (e.key !== 'Backspace' && e.key !== ' ' && e.key !== 'Enter') {
+      lastAutocorrectRef.current = null;
+      recentlyCancelledWordRef.current = null;
+    }
+
+    // 2. STRICTLY BLOCK UNDO / REDO (Ctrl+Z, Cmd+Z, Ctrl+Y)
     if (
       (e.ctrlKey || e.metaKey) &&
       (e.key === 'z' || e.key === 'Z' || e.key === 'y' || e.key === 'Y')
     ) {
       e.preventDefault();
-      triggerSnackbar('🚫 Undo is permanently disabled in Google Docs (Cursed Edition).');
-      return;
-    }
-
-    // 2. TAB PRESSED TO CHOOSE SUGGESTION -> STRICTLY FORBIDDEN!
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      triggerSnackbar('🚫 Tab key intercepted! Google Docs autocorrect suggestions are view-only. You cannot choose it!');
+      e.stopPropagation();
+      triggerUndoBlockedFeedback();
       return;
     }
 
     // 3. ANTI-CAPITALIZATION AFTER PERIODS:
-    // "Never auto-capitalize the first letter of a word after a period. Actively enforce lowercase on first character."
     if (e.key.length === 1 && /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
       const textBefore = value.slice(0, selectionStart);
       if (shouldEnforceLowercaseAfterPeriod(textBefore)) {
@@ -226,77 +141,111 @@ export default function AutocorrectNotepad() {
           if (textareaRef.current) {
             textareaRef.current.selectionStart = selectionStart + 1;
             textareaRef.current.selectionEnd = selectionStart + 1;
-            inspectWordAtCursor(newText, selectionStart + 1);
           }
         }, 0);
         return;
       }
     }
+
+    // 4. IN-LINE PREFIX-MATCHING AUTOCORRECT ON SPACE, ENTER, OR PUNCTUATION
+    const triggerKeys = [' ', 'Enter', '.', ',', '!', '?', ';', ':'];
+    if (triggerKeys.includes(e.key)) {
+      const textBeforeCursor = value.slice(0, selectionStart);
+      // Find the last word immediately preceding the cursor
+      const lastWordMatch = textBeforeCursor.match(/([a-zA-Z0-9'-]+)$/);
+
+      if (lastWordMatch) {
+        const rawWord = lastWordMatch[1];
+
+        // If user just cancelled this exact word, don't re-autocorrect immediately
+        if (recentlyCancelledWordRef.current === rawWord) {
+          recentlyCancelledWordRef.current = null;
+          lastAutocorrectRef.current = null;
+          return;
+        }
+        recentlyCancelledWordRef.current = null;
+
+        // Must match the first letters (prefix)! E.g. "aba" -> "abacada"
+        const result = getPrefixMatchAutocorrect(rawWord);
+
+        if (result && result.transformed && result.transformed.toLowerCase() !== rawWord.toLowerCase()) {
+          e.preventDefault();
+
+          const wordStartIndex = selectionStart - rawWord.length;
+          const separator = e.key === 'Enter' ? '\n' : e.key;
+
+          const updatedText =
+            value.slice(0, wordStartIndex) +
+            result.transformed +
+            separator +
+            value.slice(selectionEnd);
+
+          const newEndIndex = wordStartIndex + result.transformed.length + separator.length;
+
+          // Save autocorrect history so Backspace can cancel it
+          lastAutocorrectRef.current = {
+            originalWord: rawWord,
+            autocorrectedWord: result.transformed,
+            wordStartIndex,
+            separator,
+            autocorrectedEndIndex: newEndIndex,
+          };
+
+          setContent(updatedText);
+          triggerSabotageFeedback(result);
+
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.selectionStart = newEndIndex;
+              textareaRef.current.selectionEnd = newEndIndex;
+            }
+          }, 0);
+          return;
+        }
+      }
+    }
   };
 
   const handleChange = (e) => {
-    const newText = e.target.value;
-    const cursorPos = e.target.selectionStart;
-    setContent(newText);
-    inspectWordAtCursor(newText, cursorPos);
+    setContent(e.target.value);
   };
 
-  const handleKeyUp = () => {
-    if (textareaRef.current) {
-      inspectWordAtCursor(content, textareaRef.current.selectionStart);
+  const handlePointerDown = () => {
+    // If user clicks away to another cursor position, clear the autocorrect undo target
+    lastAutocorrectRef.current = null;
+    recentlyCancelledWordRef.current = null;
+  };
+
+  // Copy with feedback
+  const handleCopy = () => {
+    try {
+      navigator.clipboard.writeText(content);
+      triggerSabotageFeedback({
+        type: 'clipboard',
+        details: 'notes copied',
+      });
+    } catch {
+      // Ignore
     }
   };
 
-  const handleClickTextarea = () => {
-    if (textareaRef.current) {
-      inspectWordAtCursor(content, textareaRef.current.selectionStart);
-    }
-  };
-
-  // Hover evasion on Google Docs suggestion chip
-  const handleMouseEnterSuggestion = () => {
-    setIsPopoverDodge((prev) => !prev);
-  };
-
-  // Attempting to click the Google Docs suggestion
-  const handleAttemptAcceptSuggestion = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    triggerSnackbar();
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  };
-
-  // Generate tokens for backdrop with red squiggly underlines on words with suggestions
-  const renderBackdropTokens = () => {
-    const wordsAndDelims = content.split(/(\s+|[.,!?;:]+)/);
-    return wordsAndDelims.map((token, idx) => {
-      if (/^\s+$/.test(token) || /^[.,!?;:]+$/.test(token)) {
-        return <span key={idx}>{token}</span>;
-      }
-      const suggestion = getAutocorrectSuggestion(token);
-      if (suggestion) {
-        return (
-          <span
-            key={idx}
-            className={idx % 2 === 0 ? styles.squigglyRed : styles.squigglyBlue}
-            title={`Suggestion available: "${suggestion.suggestion}" (Unselectable)`}
-          >
-            {token}
-          </span>
-        );
-      }
-      return <span key={idx}>{token}</span>;
-    });
+  // Download note as .txt
+  const handleDownload = () => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${docTitle.toLowerCase().replace(/\s+/g, '_') || 'cursed_note'}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className={styles.googleDocsContainer}>
-      {/* 1. Google Docs Top Application Header */}
+      {/* 1. Header Bar with Official Unya na Logo */}
       <header className={styles.docsAppHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.docsLogo} title="Unya na Notes - Unproductive Edition">
+          <div className={styles.docsLogo} title="Unya na Notes">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1752F0] text-white shadow-xs">
               <svg
                 className="h-5 w-5"
@@ -327,12 +276,9 @@ export default function AutocorrectNotepad() {
               <span className={styles.cloudStatus} title="Synced to Drive">
                 ☁ Saved to Unya Drive
               </span>
-              <span className={styles.lockedBadge}>
-                🔒 AUTOCORRECT: CANNOT CHOOSE
-              </span>
             </div>
 
-            {/* Google Docs Classic Menus */}
+            {/* Menubar */}
             <nav className={styles.menubar} aria-label="Menu bar">
               {['File', 'Edit', 'View', 'Insert', 'Format', 'Tools', 'Extensions', 'Help'].map((item) => (
                 <div key={item} className="relative">
@@ -350,23 +296,12 @@ export default function AutocorrectNotepad() {
                         type="button"
                         onClick={() => {
                           setActiveMenu(null);
-                          triggerSnackbar(`Google Docs ${item} menu: "Everything is deferred to ugma."`);
+                          if (item === 'File') handleDownload();
+                          else if (item === 'Edit') handleCopy();
                         }}
                         className={styles.dropdownOption}
                       >
-                        <span>{item} Option 1</span>
-                        <span className="text-gray-400 text-xs">Ctrl+{item[0]}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveMenu(null);
-                          triggerSnackbar('Autocorrect setting: "Suggestions are permanently non-negotiable."');
-                        }}
-                        className={styles.dropdownOption}
-                      >
-                        <span>Spellcheck Preferences</span>
-                        <span className="text-amber-500 font-bold text-xs">View-only</span>
+                        <span>{item === 'File' ? 'Download .txt' : item === 'Edit' ? 'Copy Text' : `${item} Action`}</span>
                       </button>
                     </div>
                   )}
@@ -377,68 +312,54 @@ export default function AutocorrectNotepad() {
         </div>
 
         <div className={styles.headerRight}>
-          <div className={styles.spellcheckIndicator} title="Spell check active with view-only suggestions">
-            <span className={styles.checkIcon}>✓</span>
-            <span className={styles.spellBadge}>99+ suggestions</span>
-          </div>
 
-          <div className={styles.userAvatar} title="Student Procrastinator">
+          <div className={styles.userAvatar} title="Student">
             <span>U</span>
           </div>
         </div>
       </header>
 
-      {/* 2. Google Docs Classic Toolbar Strip */}
+      {/* 2. Toolbar Strip */}
       <div className={styles.docsToolbar}>
         <div className={styles.toolbarGroup}>
           <button
             type="button"
-            onClick={() => triggerSnackbar('Undo is disabled for character development.')}
+            onClick={triggerUndoBlockedFeedback}
             className={`${styles.toolBtn} ${styles.toolBtnDisabled}`}
-            title="Undo (Ctrl+Z) - Disabled"
+            title="Undo (Ctrl+Z) - Permanently Disabled"
           >
             ↶
           </button>
           <button
             type="button"
-            onClick={() => triggerSnackbar('Redo is disabled.')}
+            onClick={triggerUndoBlockedFeedback}
             className={`${styles.toolBtn} ${styles.toolBtnDisabled}`}
-            title="Redo (Ctrl+Y) - Disabled"
+            title="Redo (Ctrl+Y) - Permanently Disabled"
           >
             ↷
           </button>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={handleCopy}
             className={styles.toolBtn}
-            title="Print (Ctrl+P)"
+            title="Copy Text"
           >
-            🖨️
+            📋
           </button>
           <button
             type="button"
-            onClick={() => triggerSnackbar('Spell check complete: 99 suggestions found, 0 can be chosen.')}
+            onClick={handleDownload}
             className={styles.toolBtn}
-            title="Spelling and grammar check (Ctrl+Alt+X)"
+            title="Export to .txt"
           >
-            <span className="text-blue-600 font-bold">A✓</span>
+            💾
           </button>
         </div>
 
         <div className={styles.toolbarDivider} />
 
-        {/* Styles & Fonts dropdowns */}
+        {/* Fonts & Sizes */}
         <div className={styles.toolbarGroup}>
-          <select
-            className={styles.toolbarSelect}
-            defaultValue="Normal text"
-            aria-label="Style"
-          >
-            <option>Normal text</option>
-            <option>Title</option>
-            <option>Heading 1</option>
-          </select>
-
           <select
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
@@ -498,16 +419,17 @@ export default function AutocorrectNotepad() {
 
         <div className={styles.toolbarDivider} />
 
-        {/* Stats on Toolbar */}
+        {/* Live Counters */}
         <div className={styles.toolbarStats}>
-          <span>Words: {content.trim() ? content.trim().split(/\s+/).length : 0}</span>
-          <span className={styles.blockedBadge}>
-            Blocked Choices: {blockedCount}
+          <span>Words: {wordCount}</span>
+          <span>Chars: {charCount}</span>
+          <span className={styles.sabotageCounter} title="Words rewritten into matching prefix words">
+            Autocorrects: {sabotageCount}
           </span>
         </div>
       </div>
 
-      {/* 3. Google Docs Ruler Bar */}
+      {/* 3. Ruler Bar */}
       <div className={styles.rulerContainer} aria-hidden="true">
         <div className={styles.rulerTrack}>
           <div className={styles.rulerMarkerLeft}>▼</div>
@@ -522,32 +444,24 @@ export default function AutocorrectNotepad() {
         </div>
       </div>
 
-      {/* 4. Document Page Viewport (Light gray canvas holding the white page) */}
+      {/* 4. Document Page Viewport */}
       <div className={styles.pageViewport}>
         <div className={styles.docPage}>
-          {/* Dual-layer: Layer 1 (Backdrop rendering red/blue squiggly underlines) */}
-          <div
-            className={styles.backdrop}
-            style={{
-              fontFamily,
-              fontSize: `${fontSize}pt`,
-              fontWeight: isBold ? 'bold' : 'normal',
-              fontStyle: isItalic ? 'italic' : 'normal',
-              textDecoration: isUnderline ? 'underline' : 'none',
-            }}
-            aria-hidden="true"
-          >
-            {renderBackdropTokens()}
-          </div>
+          {showFlash && <div className={styles.flashOverlay} aria-hidden="true" />}
 
-          {/* Layer 2: Main Transparent Textarea capturing all user keystrokes & clicks */}
+          {undoBlockedNotice && (
+            <div className={styles.undoBlockedToast} role="alert">
+              <span>🚫 Undo / Redo is permanently disabled for your character development. (Use Backspace to cancel autocorrect).</span>
+            </div>
+          )}
+
+          {/* Clean, high-performance in-line textarea */}
           <textarea
             ref={textareaRef}
             value={content}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
-            onClick={handleClickTextarea}
+            onPointerDown={handlePointerDown}
             className={styles.docTextarea}
             style={{
               fontFamily,
@@ -556,96 +470,27 @@ export default function AutocorrectNotepad() {
               fontStyle: isItalic ? 'italic' : 'normal',
               textDecoration: isUnderline ? 'underline' : 'none',
             }}
-            placeholder="Type your notes here... Autocorrect suggestions will appear just like Google Docs, but you can NEVER choose them."
+            placeholder="Start typing your note..."
             spellCheck="false"
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
-            aria-label="Google Docs Document Content"
+            aria-label=""
           />
 
-          {/* Hidden Mirror DOM for exact pixel coordinates measurement */}
-          <div
-            ref={mirrorRef}
-            className={styles.hiddenMirror}
-            style={{
-              fontFamily,
-              fontSize: `${fontSize}pt`,
-            }}
-            aria-hidden="true"
-          />
-
-          {/* 5. THE ICONIC GOOGLE DOCS AUTOCORRECT POPOVER */}
-          {activeWordInfo && (
-            <div
-              className={`${styles.googleDocsPopover} ${
-                isPopoverShaking ? styles.popoverShake : ''
-              }`}
-              style={{
-                top: `${popoverPos.top}px`,
-                left: `${popoverPos.left}px`,
-              }}
-              role="dialog"
-              aria-label="Google Docs Autocorrect Suggestion"
-            >
-              {/* Popover Top Row: Suggested text in Google Docs Blue + Unselectable Accept Button */}
-              <div className={styles.popoverSuggestionRow}>
-                <button
-                  type="button"
-                  onClick={handleAttemptAcceptSuggestion}
-                  onMouseEnter={handleMouseEnterSuggestion}
-                  className={`${styles.suggestionPillBtn} ${
-                    isPopoverDodge ? styles.suggestionPillDodged : ''
-                  }`}
-                  title="Click to accept suggestion (Strictly Forbidden!)"
-                >
-                  <span className={styles.suggestedWordText}>
-                    {activeWordInfo.suggestion}
-                  </span>
-                  <span className={styles.acceptCheckmarkIcon}>✓</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => triggerSnackbar('Ignore option clicked: The suggestion refuses to be ignored.')}
-                  className={styles.overflowMenuBtn}
-                  title="More options"
-                >
-                  ⋮
-                </button>
-              </div>
-
-              {/* Popover Divider */}
-              <div className={styles.popoverDivider} />
-
-              {/* Popover Bottom Row: Google Docs telemetry & View-Only notice */}
-              <div className={styles.popoverFooter}>
-                <span className={styles.popoverType}>
-                  Autocorrect suggestion
-                </span>
-                <span className={styles.cannotChooseTag}>
-                  🔒 Cannot choose
-                </span>
-              </div>
+          {/* Floating In-line Sabotage Toast */}
+          {lastSabotage && (
+            <div className={styles.sabotageToast} role="status" aria-live="polite">
+              <span className={styles.toastTypeBadge}>
+                {lastSabotage.type === 'cancelled'
+                  ? 'Reverted'
+                  : 'Prefix Matched'}
+              </span>
+              <span>{lastSabotage.details}</span>
             </div>
           )}
         </div>
       </div>
-
-      {/* 6. Google Docs Bottom Floating Snackbar */}
-      {snackbarMsg && (
-        <div className={styles.docsSnackbar} role="alert">
-          <span className={styles.snackbarIcon}>ℹ️</span>
-          <span className={styles.snackbarText}>{snackbarMsg}</span>
-          <button
-            type="button"
-            onClick={() => setSnackbarMsg(null)}
-            className={styles.snackbarDismiss}
-          >
-            ✕
-          </button>
-        </div>
-      )}
     </div>
   );
 }
