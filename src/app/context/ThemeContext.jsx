@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext({
-  theme: 'light',
-  isFlashlight: false,
+  theme: 'flashlight',
+  isFlashlight: true,
   origin: null,
   toggleTheme: () => {},
   setTheme: () => {},
@@ -12,9 +12,9 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
       const saved = localStorage.getItem('unproductive_theme');
-      return saved === 'flashlight' ? 'flashlight' : 'light';
+      return saved === 'light' ? 'light' : 'flashlight';
     } catch {
-      return 'light';
+      return 'flashlight';
     }
   });
 

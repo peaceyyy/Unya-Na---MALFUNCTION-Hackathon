@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import Navbar from './Navbar';
 import FlashlightOverlay from '../components/FlashlightOverlay';
+import Doomscroll from '../../features/extras/Doomscroll';
 import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import styles from './DashboardLayout.module.css';
@@ -25,7 +26,7 @@ function canElementScrollVertically(target, boundary, deltaY) {
   return false;
 }
 
-export default function DashboardLayout({ scrollable = true, children }) {
+export default function DashboardLayout({ scrollable = true, onLogout, children }) {
   const containerRef = useRef(null);
   const { isFlashlight } = useTheme();
   const { opacity, resetOpacity } = useOpacity();
@@ -57,7 +58,7 @@ export default function DashboardLayout({ scrollable = true, children }) {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-canvas text-ink relative">
-      <Navbar />
+      <Navbar onLogout={onLogout} />
 
       {scrollable ? (
         <main
@@ -92,6 +93,9 @@ export default function DashboardLayout({ scrollable = true, children }) {
           </div>
         </div>
       )}
+
+      {/* Persistent Bottom-Right Doomscroll Corner */}
+      <Doomscroll />
 
       {isFlashlight && <FlashlightOverlay />}
     </div>
