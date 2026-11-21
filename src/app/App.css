@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+@theme {
+  --color-canvas: #f9f5ea;
+  --color-surface: #fffdf7;
+  --color-surface-subtle: #f2ece0;
+  --color-border: #e5dec9;
+  --color-border-strong: #d2c7ad;
+  --color-ink: #1f1c17;
+  --color-ink-secondary: #544d42;
+  --color-ink-muted: #6e6557;
+
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-soft: #eaf1fe;
+  --color-accent-indigo: #4f46e5;
+  --color-accent-violet: #7c3aed;
+
+  --font-display: "Papyrus", "Comic Neue", "Comic Sans MS", fantasy, serif;
+  --font-playful: "Comic Neue", "Comic Sans MS", cursive, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
 @layer base {
   html,
   body,
@@ -10,16 +31,25 @@
     padding: 0;
     overflow: hidden;
     position: fixed;
-    background-color: #f8fafc;
-    color: #0f172a;
-    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  button:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   ::selection {
-    background-color: rgba(23, 82, 240, 0.16);
-    color: #1752f0;
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
   }
 }
 
