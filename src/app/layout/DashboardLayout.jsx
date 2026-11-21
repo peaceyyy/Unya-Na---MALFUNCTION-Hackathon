@@ -3,7 +3,10 @@ import Navbar from './Navbar';
 import FlashlightOverlay from '../components/FlashlightOverlay';
 import Doomscroll from '../../features/extras/Doomscroll';
 import { useTheme } from '../context/ThemeContext';
-import { useOpacity } from '../context/OpacityContext';
+import { useOpacity, DANCE_STOP_AT, DANCE_STEP } from '../context/OpacityContext';
+import DanceGate from '../../features/dance/DanceGate';
+import PowerNotice from '../../features/power/PowerNotice';
+import LazyAssistant from '../../features/assistant/LazyAssistant';
 import styles from './DashboardLayout.module.css';
 
 function canElementScrollVertically(target, boundary, deltaY) {
@@ -29,7 +32,7 @@ function canElementScrollVertically(target, boundary, deltaY) {
 export default function DashboardLayout({ scrollable = true, onLogout, children }) {
   const containerRef = useRef(null);
   const { isFlashlight } = useTheme();
-  const { opacity, resetOpacity } = useOpacity();
+  const { opacity, danceRequired, registerDance, finishDance } = useOpacity();
 
   useEffect(() => {
     if (!scrollable) return;
@@ -77,27 +80,24 @@ export default function DashboardLayout({ scrollable = true, onLogout, children 
         </main>
       )}
 
-      {opacity === 0 && (
-        <div
-          onClick={resetOpacity}
-          className="absolute inset-0 top-14 flex items-center justify-center cursor-pointer z-20 bg-canvas/60 backdrop-blur-xs transition-opacity duration-300"
-        >
-          <div className="rounded-2xl border border-border bg-surface p-6 text-center shadow-lg space-y-2 max-w-sm mx-4">
-            <span className="inline-block text-2xl">😴</span>
-            <p className="font-display text-lg font-bold text-ink">
-              Unya na... everything faded away.
-            </p>
-            <p className="text-xs text-ink-secondary">
-              Click anywhere or drag the top slider to restore the interface.
-            </p>
-          </div>
-        </div>
+      {danceRequired && (
+        <DanceGate
+          opacity={opacity}
+          stopAt={DANCE_STOP_AT}
+          step={DANCE_STEP}
+          onDance={registerDance}
+          onDone={finishDance}
+        />
       )}
 
       {/* Persistent Bottom-Right Doomscroll Corner */}
       <Doomscroll />
 
+      {/* Lazy local assistant (Ollama), just left of the Doomscroll corner */}
+      <LazyAssistant />
+
       {isFlashlight && <FlashlightOverlay />}
+      <PowerNotice />
     </div>
   );
 }
