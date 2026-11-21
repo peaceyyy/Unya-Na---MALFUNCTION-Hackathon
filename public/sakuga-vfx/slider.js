@@ -59,7 +59,7 @@ class SakugaSlider extends fx.Base {
     r.addEventListener('change', () => {
       const c = at(this.th), dir = Math.sign(this.peak) || 1;
       if (Math.abs(this.peak) > 1.3) { slash(c.x + dir * 34, c.y, { len: 150, ang: dir > 0 ? 0 : Math.PI, thick: 12, life: 0.5, col: '#b8b3ff' }); burst(c.x + dir * 4, c.y, { r: 24, spikes: 11, life: 0.28 }); shards(c.x + dir * 10, c.y, { n: 4, size: 4, dir: dir > 0 ? 0 : Math.PI, arc: 2.4 }); ticks(c.x + dir * 52, c.y - 30, { dir: dir > 0 ? -0.6 : -2.5, n: 3, r: 4, len: 10 });
-        later(520, () => { puff(c.x - dir * 60, c.y - 34, { size: 11, n: 4, vy: -10, life: 0.8 }); puff(c.x - dir * 22, c.y - 22, { size: 6, n: 3, vy: -8, life: 0.6 }); wob(c.x - dir * 82, c.y - 34, { dir: -1, r: 9 }); }); }
+        later(520, () => { if (!this.hasAttribute('nosmoke')) { puff(c.x - dir * 60, c.y - 34, { size: 11, n: 4, vy: -10, life: 0.8 }); puff(c.x - dir * 22, c.y - 22, { size: 6, n: 3, vy: -8, life: 0.6 }); } wob(c.x - dir * 82, c.y - 34, { dir: -1, r: 9 }); }); }
       if (this.frac() >= 1 || this.frac() <= 0) shards(c.x, c.y, { n: 5, dir: dir > 0 ? Math.PI : 0, arc: 2 });
       this.peak = 0; this.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -71,7 +71,7 @@ class SakugaSlider extends fx.Base {
     if (Math.abs(v) > Math.abs(this.peak)) this.peak = v; else this.peak *= 0.96;
     if (Math.abs(v) > 0.35) {   // fast: a bank of cloud rolls up behind the thumb, with speed lines and chips
       this.acc += dt * Math.abs(v) * 20; const c = at(this.th), dir = Math.sign(v), big = Math.min(1, Math.abs(v) / 2.4);
-      while (this.acc > 1) { this.acc -= 1; puff(c.x - dir * rnd(14, 30), c.y - rnd(2, 12) - big * 8, { size: rnd(6, 9) + big * 9, n: 4, vx: -dir * rnd(26, 70), vy: -rnd(22, 58) * (0.5 + big), life: rnd(0.7, 1.15) });
+      while (this.acc > 1) { this.acc -= 1; if (!this.hasAttribute('nosmoke')) puff(c.x - dir * rnd(14, 30), c.y - rnd(2, 12) - big * 8, { size: rnd(6, 9) + big * 9, n: 4, vx: -dir * rnd(26, 70), vy: -rnd(22, 58) * (0.5 + big), life: rnd(0.7, 1.15) });
         lines(c.x - dir * 16, c.y + rnd(-4, 12), { n: 1, dir: dir > 0 ? Math.PI : 0, len: 50 + big * 50, spread: 2, life: 0.24 }); if (Math.random() < 0.3) shards(c.x - dir * 20, c.y + 6, { n: 1, size: 3.5, speed: 120, dir: dir > 0 ? Math.PI + 0.5 : -0.5, arc: 1 }); }
       if (Math.abs(v) > 1.5 && this.t - this.said > 1.1) { this.said = this.t; sfx('shu', c.x - dir * 6, c.y - 78, { size: 104, life: 0.75, rot: -0.16, col: '#5a4fd8', edge: '#ffffff' }); }
     }

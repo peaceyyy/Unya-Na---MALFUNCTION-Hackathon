@@ -3,6 +3,10 @@ import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import SakugaSlider from '../components/SakugaSlider';
 import LightSwitch from '../components/LightSwitch';
+import JustDanceButton from '../../features/dance/JustDanceButton';
+import { usePower } from '../context/PowerContext';
+import SakugaButton from '../components/SakugaButton';
+import { loadSakuga } from '../components/sakugaLoader';
 
 function formatDuration(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
@@ -11,8 +15,13 @@ function formatDuration(totalSeconds) {
   return `${h}:${m}:${s}`;
 }
 
-export default function Navbar() {
-  const { isFlashlight, toggleTheme } = useTheme();
+export default function Navbar({ onLogout }) {
+  const { isFlashlight, toggleTheme, isLocked } = useTheme();
+  const { phase, utility } = usePower();
+
+  useEffect(() => {
+    loadSakuga('button');
+  }, []);
   const { opacity } = useOpacity();
   const [idleSeconds, setIdleSeconds] = useState(0);
   const lastActivityRef = useRef(Date.now());
@@ -89,12 +98,18 @@ export default function Navbar() {
       </div>
 
       {/* Right: Tactile Physical Light Switch & Status */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-5">
+        <JustDanceButton />
         <div
           className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary"
           title={isFlashlight ? 'Room lights are OFF (Flashlight active)' : 'Room lights are ON (Daylight view)'}
         >
-          {isFlashlight ? (
+          {phase === 'out' ? (
+            <>
+              <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <span>{utility} outage</span>
+            </>
+          ) : isFlashlight ? (
             <>
               <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
               <span>Flashlight Active</span>
@@ -108,8 +123,28 @@ export default function Navbar() {
         </div>
 
         <div data-theme-toggle="true" className="flex items-center">
-          <LightSwitch isFlashlight={isFlashlight} onToggle={toggleTheme} />
+          <LightSwitch
+            isFlashlight={isFlashlight}
+            onToggle={toggleTheme}
+            disabled={isLocked}
+            disabledReason={`No power. ${utility || 'The utility'} has to restore it first.`}
+          />
         </div>
+
+        {onLogout && (
+          // The Sakuga button is taller than the navbar, so it is scaled down like the
+          // Just dance button next to it.
+          <div
+            className="relative flex h-9 w-[81px] shrink-0 items-center justify-end"
+            title="Log out back to login screen"
+          >
+            <div style={{ transform: 'scale(0.6)', transformOrigin: 'right center', flex: 'none' }}>
+              <SakugaButton variant="secondary" onClick={onLogout} label="Log out">
+                Log out
+              </SakugaButton>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

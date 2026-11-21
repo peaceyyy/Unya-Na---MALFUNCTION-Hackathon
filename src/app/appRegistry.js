@@ -1,20 +1,12 @@
+import AztecCalendar from '../features/calendar/AztecCalendar';
+import AutocorrectNotepad from '../features/notepad/AutocorrectNotepad';
+import Clock from '../features/clock/Clock.jsx';
+
 // Central launcher registry for Unya na home screen cards.
 // Teammates implement their components in src/features/* on their branches;
 // once merged, import the component here and assign it to `component`.
 
-import AztecCalendar from '../features/calendar/AztecCalendar';
-
 export const APP_REGISTRY = [
-
-    {
-    id: 'mouse-tasks',
-    title: 'To-Do List',
-    tagline: 'Check off your tasks, assuming you can catch them.',
-    category: 'Tasks',
-    tone: 'blue',
-    featurePath: 'src/features/tasks/MouseTaskList.jsx',
-    component: null,
-  },
   {
     id: 'aztec-calendar',
     title: 'Calendar',
@@ -31,7 +23,7 @@ export const APP_REGISTRY = [
     category: 'Writing',
     tone: 'violet',
     featurePath: 'src/features/notepad/AutocorrectNotepad.jsx',
-    component: null,
+    component: AutocorrectNotepad,
   },
 
   {
@@ -64,39 +56,11 @@ export const APP_REGISTRY = [
   {
     id: 'delayed-alarm',
     title: 'Clock',
-    tagline: 'Alerts you right after the deadline has safely passed.',
+    tagline: 'The clock is right. The alarm is early or late.',
     category: 'Time',
     tone: 'indigo',
-    featurePath: 'src/features/extras/DelayedAlarm.jsx',
-    component: null,
-  },
-
-  {
-    id: 'doomscroll',
-    title: 'Subway Surfers',
-    tagline: 'A quick two-minute break that never quite ends.',
-    category: 'Break',
-    tone: 'blue',
-    featurePath: 'src/features/extras/Doomscroll.jsx',
-    component: null,
-  },
-  {
-    id: 'spotify',
-    title: 'Focus Playlist',
-    tagline: 'Curated background audio engineered to distract.',
-    category: 'Audio',
-    tone: 'indigo',
-    featurePath: 'src/features/extras/SpotifyWidget.jsx',
-    component: null,
-  },
-  {
-    id: 'translator',
-    title: 'Translator',
-    tagline: 'Convert clear instructions into something less useful.',
-    category: 'Language',
-    tone: 'violet',
-    featurePath: 'src/features/extras/Translator.jsx',
-    component: null,
+    featurePath: 'src/features/clock/Clock.jsx',
+    component: Clock,
   },
 ];
 

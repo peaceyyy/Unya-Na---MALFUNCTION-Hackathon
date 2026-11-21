@@ -5,10 +5,11 @@ import React from 'react';
  * Flips between room lights ON (daylight view) and room lights OFF (flashlight dark mode).
  * Emits click coordinates to center the radial flashlight beam over the switch.
  */
-export default function LightSwitch({ isFlashlight, onToggle }) {
+export default function LightSwitch({ isFlashlight, onToggle, disabled = false, disabledReason }) {
   const isLightsOn = !isFlashlight;
 
   const handleClick = (e) => {
+    if (disabled) return;
     const rect = e.currentTarget.getBoundingClientRect();
     if (onToggle) {
       onToggle({
@@ -23,18 +24,23 @@ export default function LightSwitch({ isFlashlight, onToggle }) {
       type="button"
       role="switch"
       aria-checked={isLightsOn}
+      aria-disabled={disabled || undefined}
       aria-label={
         isLightsOn
           ? 'Turn room lights OFF (activate flashlight mode)'
           : 'Turn room lights ON (daylight view)'
       }
       title={
-        isLightsOn
-          ? 'Room lights are ON. Click switch to turn OFF and use flashlight.'
-          : 'Room lights are OFF (Flashlight active). Click switch to turn lights ON.'
+        disabled
+          ? disabledReason || 'The switch is locked.'
+          : isLightsOn
+            ? 'Room lights are ON. Click switch to turn OFF and use flashlight.'
+            : 'Room lights are OFF (Flashlight active). Click switch to turn lights ON.'
       }
       onClick={handleClick}
-      className="group relative flex flex-col items-center justify-between rounded-lg border border-slate-300/90 bg-gradient-to-b from-slate-50 to-slate-200 p-1 shadow-sm transition-all duration-150 hover:border-slate-400 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none"
+      className={`group relative flex flex-col items-center justify-between rounded-lg border border-slate-300/90 bg-gradient-to-b from-slate-50 to-slate-200 p-1 shadow-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none ${
+        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-slate-400 active:scale-95'
+      }`}
       style={{
         width: '34px',
         height: '46px',
