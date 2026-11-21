@@ -1,0 +1,62 @@
+/* Wheel colours come from the app's own theme tokens. */
+.band { fill: none; stroke: var(--color-border); stroke-width: 1; }
+.face { fill: var(--color-surface); stroke: var(--color-border); stroke-width: 1.5; }
+
+.seg { stroke: var(--color-border); stroke-width: 1.2; }
+.d0 { fill: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); }
+.d1 { fill: color-mix(in srgb, var(--color-accent-indigo) 16%, var(--color-surface)); }
+.d2 { fill: color-mix(in srgb, var(--color-accent-violet) 16%, var(--color-surface)); }
+.d3 { fill: var(--color-surface-subtle); }
+.on { stroke: var(--color-accent); stroke-width: 3; }
+
+.nseg { fill: var(--color-surface-subtle); stroke: var(--color-border); stroke-width: 1; }
+.nOn { fill: var(--color-accent-soft); stroke: var(--color-accent); stroke-width: 2.5; }
+.ndot { fill: var(--color-ink); }
+
+.lbl { font: 700 11px var(--font-display); letter-spacing: 0.04em; fill: var(--color-ink); text-anchor: middle; text-transform: uppercase; }
+.nah { font: italic 400 10px var(--font-sans); fill: var(--color-ink-secondary); text-anchor: middle; }
+.idx { font: 500 9px var(--font-sans); fill: var(--color-ink-muted); text-anchor: middle; font-variant-numeric: tabular-nums; }
+
+.pointer { fill: var(--color-accent); }
+.cNum { fill: var(--color-accent); }
+.cSign { font: 700 34px var(--font-display); fill: var(--color-ink); text-anchor: middle; letter-spacing: -0.01em; }
+.cNah { font: italic 400 17px var(--font-sans); fill: var(--color-ink-secondary); text-anchor: middle; }
+.cMeta { font: 500 12px var(--font-sans); fill: var(--color-ink-muted); text-anchor: middle; letter-spacing: 0.06em; }
+
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--color-border-strong); }
+.s0 { background: var(--color-accent); }
+.s1 { background: var(--color-accent-indigo); }
+.s2 { background: var(--color-accent-violet); }
+.s3 { background: var(--color-surface-subtle); }
+
+/* Wheel turn: same curve and length as the original. */
+.ring { transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.seg, .nseg { transition: fill 0.3s ease, stroke 0.3s ease; }
+
+.swSm { width: 8px; height: 8px; flex: 0 0 auto; }
+.cell {
+  position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  min-height: 64px; padding: 8px; border-radius: 10px; border: 1px solid transparent;
+  background: var(--color-canvas);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.cellSel { border-color: var(--color-accent); background: var(--color-accent-soft); }
+/* Today is solid green, whether or not it is the selected day. */
+.cellToday { background: #15803d; border-color: #15803d; }
+.cellToday span { color: #fff; }
+.cellToday.cellSel { border-color: var(--color-accent); }
+.pin { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring, .seg, .nseg, .cell { transition: none; }
+}
+
+/* Jose Mari Chan: lifts slightly on hover, answer bubble grows from his corner. */
+.jose { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); transform-origin: center bottom; }
+button:hover > .jose { transform: translateY(-6px); }
+.bubble { transform-origin: bottom right; animation: bubbleIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes bubbleIn { from { opacity: 0; transform: scale(0.92) translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .jose { transition: none; }
+  .bubble { animation: none; }
+}
