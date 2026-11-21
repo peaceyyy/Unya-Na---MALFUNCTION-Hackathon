@@ -47,7 +47,7 @@ export default function LoginGate({ onLogin, onBack }) {
           </h1>
 
           <p className="text-xs text-ink-secondary max-w-xs leading-relaxed mx-auto">
-            Credentials verified. Final security checkpoint: access is strictly restricted to automated machines.
+            Credentials verified. Checkpoint 1 of 2: Pass the Big Red Button's sub-millisecond reflex gate. Defeat its timing lock to face the Bouncer.
           </p>
         </div>
 
@@ -79,9 +79,9 @@ export default function LoginGate({ onLogin, onBack }) {
             type="button"
             onClick={onLogin}
             className="text-[11px] font-semibold text-accent hover:text-accent-hover transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
-            title="Bypass gate for testing"
+            title="Bypass captcha to boss fight"
           >
-            [Dev Bypass →]
+            [Dev Bypass to Boss →]
           </button>
         </div>
       </div>

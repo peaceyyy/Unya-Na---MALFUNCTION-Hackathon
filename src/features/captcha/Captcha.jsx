@@ -18,8 +18,6 @@ export default function Captcha({
   const [shaking, setShaking] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [failCount, setFailCount] = useState(0);
-  const [secretInput, setSecretInput] = useState('');
-  const [overrideError, setOverrideError] = useState('');
 
   const [telemetry, setTelemetry] = useState({
     type: 'idle',
@@ -206,7 +204,7 @@ export default function Captcha({
           2
         )}s (Target: ${targetTime.toFixed(1)}s, error: ${signStr}${diff.toFixed(
           2
-        )}s). Machine identity verified!`,
+        )}s). WAIT... A HUMAN TIMED THAT?! ALERT: Deploying Big Red Button Bouncer!`,
       });
 
       if (onVerifySuccess) {
@@ -252,32 +250,34 @@ export default function Captcha({
     }
   };
 
-  // Handle Secret Key Override Submission (unlocked after 3 misses)
-  const handleSecretSubmit = (e) => {
-    e.preventDefault();
-    const cleanInput = secretInput.trim().toLowerCase();
-    const valid =
-      cleanInput === secretKey.toLowerCase() ||
-      ['unyana', 'human', 'malfunction', 'robot', 'secret'].includes(cleanInput);
-
-    if (valid) {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      setIsSuccess(true);
-      setOverrideError('');
-      playTone(880, 0.15, 'triangle');
-      safeTimeout(() => playTone(1320, 0.25, 'sine'), 120);
-      setTelemetry({
-        type: 'success',
-        message: '✓ SECRET OVERRIDE CONFIRMED: Human fatigue acknowledged. Welcome to Unproductive OS!',
-      });
-      if (onVerifySuccess) {
-        safeTimeout(onVerifySuccess, 850);
-      }
-    } else {
-      playTone(180, 0.3, 'sawtooth');
-      setOverrideError('Invalid key. (Hint: "unyana")');
+  // Handle Alt + C Keyboard Shortcut Override (unlocked after 3 misses)
+  const handleAltCOverride = useCallback(() => {
+    if (isSuccess) return;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    setIsSuccess(true);
+    playTone(880, 0.15, 'triangle');
+    safeTimeout(() => playTone(1320, 0.25, 'sine'), 120);
+    setTelemetry({
+      type: 'success',
+      message: '✓ OVERRIDE ACCEPTED: Alt + C pressed. Human fatigue acknowledged! Accessing next stage...',
+    });
+    if (onVerifySuccess) {
+      safeTimeout(onVerifySuccess, 850);
     }
-  };
+  }, [isSuccess, playTone, safeTimeout, onVerifySuccess]);
+
+  // Global listener for Alt + C shortcut
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if ((e.altKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.code === 'KeyC')) {
+        e.preventDefault();
+        handleAltCOverride();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [handleAltCOverride]);
 
   // Handle Keyboard Activation (eliminates keyup release latency for Space/Enter)
   const handleKeyDown = (e) => {
@@ -356,33 +356,16 @@ export default function Captcha({
         </div>
       </div>
 
-      {/* 4. Secret Key Override (Unlocked after 3 failed attempts) */}
+      {/* 4. Alt + C Shortcut Override (Unlocked after 3 failed attempts) */}
       {failCount >= 3 && !isSuccess && (
-        <div className={styles.overrideSection}>
+        <div className={styles.overrideSection} role="status" aria-live="polite">
           <div className={styles.overrideHeader}>
             <span className={styles.overrideTitle}>Human Fatigue Override</span>
-            <span className={styles.overrideSubtitle}>Failures: {failCount} (Unlocked)</span>
+            <span className={styles.overrideSubtitle}>Failures: {failCount}</span>
           </div>
-          <form onSubmit={handleSecretSubmit} className={styles.overrideForm}>
-            <input
-              type="text"
-              value={secretInput}
-              onChange={(e) => {
-                setSecretInput(e.target.value);
-                if (overrideError) setOverrideError('');
-              }}
-              placeholder='Enter secret key ("unyana")...'
-              className={styles.overrideInput}
-              aria-label="Secret key override"
-              autoComplete="off"
-            />
-            <button type="submit" className={styles.overrideButton}>
-              Unlock
-            </button>
-          </form>
-          {overrideError && (
-            <div className={styles.overrideErrorText}>{overrideError}</div>
-          )}
+          <div className={styles.overrideInstruction}>
+            Press <kbd className={styles.kbdKey}>Alt</kbd> + <kbd className={styles.kbdKey}>C</kbd> to bypass this gate.
+          </div>
         </div>
       )}
 
@@ -412,7 +395,11 @@ export default function Captcha({
           </button>
         </div>
         <span className={failCount >= 3 ? styles.failTag : styles.toleranceTag}>
-          {failCount > 0 ? `FAILS: ${failCount} (3 unlocks secret)` : `WINDOW: ±${(TOLERANCE * 1000).toFixed(0)}ms`}
+          {failCount >= 3
+            ? `OVERRIDE READY: ALT + C`
+            : failCount > 0
+            ? `FAILS: ${failCount} (3 unlocks bypass)`
+            : `WINDOW: ±${(TOLERANCE * 1000).toFixed(0)}ms`}
         </span>
       </div>
 

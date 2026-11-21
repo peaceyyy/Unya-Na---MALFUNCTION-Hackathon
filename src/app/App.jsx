@@ -7,6 +7,7 @@ import DemotivationalQuote from '../features/quotes/DemotivationalQuote';
 import RatingModalManager from '../features/rating/RatingModal';
 import LoginGate from '../features/captcha/LogicGate';
 import LoginPage from '../features/auth/LoginPage';
+import AvoidantButton from '../features/avoidant-button/AvoidantButton';
 
 function readHashAppId() {
   const raw = window.location.hash.replace(/^#\/?/, '').trim();
@@ -14,7 +15,7 @@ function readHashAppId() {
 }
 
 export default function App() {
-  // Authentication stages: 'login' | 'captcha' | 'authenticated'
+  // Authentication stages: 'login' | 'captcha' | 'boss' | 'authenticated'
   const [authStage, setAuthStage] = useState(() => {
     try {
       return sessionStorage.getItem('unproductive_auth') === 'true' ? 'authenticated' : 'login';
@@ -53,7 +54,21 @@ export default function App() {
   }
 
   if (authStage === 'captcha') {
-    return <LoginGate onLogin={handleAuthenticated} onBack={() => setAuthStage('login')} />;
+    return (
+      <LoginGate
+        onLogin={() => setAuthStage('boss')}
+        onBack={() => setAuthStage('login')}
+      />
+    );
+  }
+
+  if (authStage === 'boss') {
+    return (
+      <AvoidantButton
+        onVictory={handleAuthenticated}
+        onBack={() => setAuthStage('captcha')}
+      />
+    );
   }
 
   const activeApp = activeAppId ? getAppById(activeAppId) : null;
