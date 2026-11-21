@@ -3,6 +3,7 @@
 // once merged, import the component here and assign it to `component`.
 
 import AztecCalendar from '../features/calendar/AztecCalendar';
+import BinaryCalculator from '../features/extras/BinaryCalculator';
 
 export const APP_REGISTRY = [
 
@@ -54,12 +55,12 @@ export const APP_REGISTRY = [
   },
   {
     id: 'binary-calculator',
-    title: 'Binary Calculator',
-    tagline: 'Everyday arithmetic, strictly in ones and zeros.',
+    title: 'Calculator',
+    tagline: 'Quick arithmetic and everyday calculations.',
     category: 'Utility',
     tone: 'blue',
     featurePath: 'src/features/extras/BinaryCalculator.jsx',
-    component: null,
+    component: BinaryCalculator,
   },
   {
     id: 'delayed-alarm',
