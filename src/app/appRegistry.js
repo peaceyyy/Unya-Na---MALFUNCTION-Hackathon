@@ -3,6 +3,7 @@
 // once merged, import the component here and assign it to `component`.
 
 import AztecCalendar from '../features/calendar/AztecCalendar';
+import AutocorrectNotepad from '../features/notepad/AutocorrectNotepad';
 
 export const APP_REGISTRY = [
 
@@ -31,7 +32,7 @@ export const APP_REGISTRY = [
     category: 'Writing',
     tone: 'violet',
     featurePath: 'src/features/notepad/AutocorrectNotepad.jsx',
-    component: null,
+    component: AutocorrectNotepad,
   },
 
   {

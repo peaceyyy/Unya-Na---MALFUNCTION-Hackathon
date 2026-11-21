@@ -1,0 +1,623 @@
+/* ==========================================================================
+   GOOGLE DOCS AUTOCORRECT NOTEPAD // STYLES
+   Faithful recreation of Google Docs styling with the Unproductive OS twist
+   ========================================================================== */
+
+.googleDocsContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  background-color: #f9fbfd;
+  color: #202124;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid #dadce0;
+  box-shadow: 0 4px 20px -2px rgba(60, 64, 67, 0.15);
+}
+
+/* --- 1. Google Docs App Header --- */
+.docsAppHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px 6px 18px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e8eaed;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.docsLogo {
+  padding-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.titleAndMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.docTitleInput {
+  font-size: 18px;
+  font-weight: 500;
+  color: #1f1f1f;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  width: 100%;
+  max-width: 270px;
+  transition: all 0.15s ease;
+}
+
+.docTitleInput:hover,
+.docTitleInput:focus {
+  background-color: #f1f3f4;
+  border-color: #dadce0;
+}
+
+.starIcon {
+  color: #fbbc04;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.cloudStatus {
+  font-size: 11px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.lockedBadge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #c5221f;
+  background-color: #fce8e6;
+  border: 1px solid #fad2cf;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+/* Menubar */
+.menubar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.menuItem {
+  font-size: 13px;
+  color: #3c4043;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.menuItem:hover,
+.menuItemActive {
+  background-color: #f1f3f4;
+  color: #202124;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(60, 64, 67, 0.2);
+  min-width: 180px;
+  z-index: 50;
+  padding: 4px 0;
+  animation: menuDrop 0.15s ease-out;
+}
+
+@keyframes menuDrop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #3c4043;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.dropdownOption:hover {
+  background-color: #f1f3f4;
+  color: #202124;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spellcheckIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background-color: #e8f0fe;
+  border: 1px solid #d2e3fc;
+  cursor: pointer;
+}
+
+.checkIcon {
+  color: #1a73e8;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.spellBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a73e8;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #1a73e8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* --- 2. Google Docs Toolbar Strip --- */
+.docsToolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  background-color: #edf2fa;
+  border-bottom: 1px solid #e1e3e1;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #444746;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.toolBtn:hover {
+  background-color: #dfe3eb;
+  color: #1f1f1f;
+}
+
+.toolBtnActive {
+  background-color: #d3e3fd;
+  color: #0b57d0;
+}
+
+.toolBtnDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 18px;
+  background-color: #c4c7c5;
+  margin: 0 4px;
+}
+
+.toolbarSelect {
+  font-size: 12px;
+  color: #444746;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+  font-weight: 500;
+}
+
+.toolbarSelect:hover {
+  background-color: #dfe3eb;
+}
+
+.toolbarSelectSmall {
+  font-size: 12px;
+  color: #444746;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 4px;
+  cursor: pointer;
+  outline: none;
+  width: 44px;
+  font-weight: 500;
+}
+
+.toolbarSelectSmall:hover {
+  background-color: #dfe3eb;
+}
+
+.toolbarStats {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #5f6368;
+}
+
+.blockedBadge {
+  font-weight: 700;
+  color: #c5221f;
+  background-color: #fce8e6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* --- 3. Google Docs Ruler Bar --- */
+.rulerContainer {
+  height: 16px;
+  background-color: #f9fbfd;
+  border-bottom: 1px solid #e1e3e1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.rulerTrack {
+  width: 100%;
+  max-width: 816px;
+  height: 100%;
+  background-color: #ffffff;
+  border-left: 1px solid #dadce0;
+  border-right: 1px solid #dadce0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.rulerMarkerLeft,
+.rulerMarkerRight {
+  color: #1a73e8;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.rulerTicks {
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
+  padding: 0 16px;
+}
+
+.rulerNumber {
+  font-size: 9px;
+  color: #70757a;
+  font-family: monospace;
+}
+
+/* --- 4. Document Page Viewport --- */
+.pageViewport {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f9fbfd;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 48px 16px;
+}
+
+/* White A4/Letter Paper Sheet */
+.docPage {
+  position: relative;
+  width: 100%;
+  max-width: 816px;
+  min-height: 840px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.15), 0 1px 2px 0 rgba(60, 64, 67, 0.3);
+  box-sizing: border-box;
+}
+
+/* Layer 1: Backdrop with squiggly lines */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 48px 56px;
+  color: transparent;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.8;
+  box-sizing: border-box;
+  user-select: none;
+  z-index: 1;
+}
+
+/* Classic Google Docs Red and Blue Wavy Lines */
+.squigglyRed {
+  color: transparent;
+  text-decoration: underline wavy #ea4335 1.8px !important;
+  text-underline-offset: 4px;
+}
+
+.squigglyBlue {
+  color: transparent;
+  text-decoration: underline wavy #1a73e8 1.8px !important;
+  text-underline-offset: 4px;
+}
+
+/* Layer 2: Main Transparent Textarea capturing typing */
+.docTextarea {
+  position: absolute;
+  inset: 0;
+  padding: 48px 56px;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: #202124;
+  caret-color: #1a73e8;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.8;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.docTextarea::placeholder {
+  color: #9aa0a6;
+  font-style: italic;
+}
+
+/* Hidden DOM mirror for measuring caret/word coordinates */
+.hiddenMirror {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: calc(100% - 112px);
+  padding: 48px 56px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.8;
+  visibility: hidden;
+  box-sizing: border-box;
+}
+
+/* --- 5. THE GOOGLE DOCS AUTOCORRECT POPOVER CARD --- */
+.googleDocsPopover {
+  position: absolute;
+  z-index: 40;
+  background-color: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 1px 2px 0 rgba(60, 64, 67, 0.3);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+  max-width: 320px;
+  animation: popoverFade 0.15s ease-out;
+  user-select: none;
+}
+
+@keyframes popoverFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.popoverShake {
+  animation: shakeAlert 0.4s ease;
+}
+
+@keyframes shakeAlert {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.popoverSuggestionRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* The Tantalizing Google Docs Suggestion Pill Button */
+.suggestionPillBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background-color: #edf2fa;
+  border: 1px solid #d3e3fd;
+  color: #0b57d0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: not-allowed;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.suggestionPillBtn:hover {
+  background-color: #fce8e6;
+  border-color: #fad2cf;
+  color: #c5221f;
+  transform: scale(0.97);
+}
+
+.suggestionPillDodged {
+  transform: translateX(16px) rotate(2deg);
+}
+
+.suggestedWordText {
+  color: #0b57d0;
+  font-weight: 700;
+}
+
+.suggestionPillBtn:hover .suggestedWordText {
+  color: #c5221f;
+}
+
+.acceptCheckmarkIcon {
+  font-size: 13px;
+  font-weight: 900;
+  color: #0b57d0;
+}
+
+.overflowMenuBtn {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: #5f6368;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.overflowMenuBtn:hover {
+  background-color: #f1f3f4;
+  color: #202124;
+}
+
+.popoverDivider {
+  height: 1px;
+  background-color: #f1f3f4;
+  width: 100%;
+}
+
+.popoverFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popoverType {
+  font-size: 10px;
+  color: #5f6368;
+}
+
+.cannotChooseTag {
+  font-size: 10px;
+  font-weight: 800;
+  color: #c5221f;
+  background-color: #fce8e6;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* --- 6. Google Docs Bottom Floating Snackbar --- */
+.docsSnackbar {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  background-color: #323232;
+  color: #ffffff;
+  font-size: 13px;
+  box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14);
+  animation: snackbarSlide 0.2s ease-out;
+  max-width: 460px;
+}
+
+@keyframes snackbarSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.snackbarIcon {
+  font-size: 14px;
+}
+
+.snackbarText {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.snackbarDismiss {
+  background: transparent;
+  border: none;
+  color: #8ab4f8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.snackbarDismiss:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
