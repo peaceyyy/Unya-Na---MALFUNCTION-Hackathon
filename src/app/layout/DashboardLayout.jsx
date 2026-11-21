@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import Navbar from './Navbar';
 import FlashlightOverlay from '../components/FlashlightOverlay';
+import Doomscroll from '../../features/extras/Doomscroll';
 import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import styles from './DashboardLayout.module.css';
@@ -92,6 +93,9 @@ export default function DashboardLayout({ scrollable = true, onLogout, children 
           </div>
         </div>
       )}
+
+      {/* Persistent Bottom-Right Doomscroll Corner */}
+      <Doomscroll />
 
       {isFlashlight && <FlashlightOverlay />}
     </div>

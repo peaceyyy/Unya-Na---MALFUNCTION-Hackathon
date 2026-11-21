@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function LoginPage({ onLogin }) {
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'signup'

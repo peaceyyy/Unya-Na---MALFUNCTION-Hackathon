@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import SakugaSlider from '../components/SakugaSlider';
+import LightSwitch from '../components/LightSwitch';
 
 function formatDuration(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
@@ -15,7 +16,6 @@ export default function Navbar({ onLogout }) {
   const { opacity } = useOpacity();
   const [idleSeconds, setIdleSeconds] = useState(0);
   const lastActivityRef = useRef(Date.now());
-  const toggleRef = useRef(null);
 
   useEffect(() => {
     const resetActivity = () => {
@@ -36,47 +36,6 @@ export default function Navbar({ onLogout }) {
       events.forEach((evt) => window.removeEventListener(evt, resetActivity));
     };
   }, []);
-
-  // Sync isFlashlight state with the custom element when changed externally
-  useEffect(() => {
-    const el = toggleRef.current;
-    if (!el) return;
-
-    if (Boolean(el.checked) !== Boolean(isFlashlight)) {
-      el.checked = Boolean(isFlashlight);
-    }
-  }, [isFlashlight]);
-
-  // Listen for the custom element's native 'change' event
-  useEffect(() => {
-    const el = toggleRef.current;
-    if (!el) return;
-
-    const handleChange = () => {
-      const rect = el.getBoundingClientRect();
-      toggleTheme({
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      });
-    };
-
-    el.addEventListener('change', handleChange);
-    return () => {
-      el.removeEventListener('change', handleChange);
-    };
-  }, [toggleTheme]);
-
-  const handleLabelClick = () => {
-    const el = toggleRef.current;
-    if (el?.shadowRoot) {
-      const btn = el.shadowRoot.querySelector('.tog');
-      if (btn) {
-        btn.click();
-        return;
-      }
-    }
-    toggleTheme();
-  };
 
   return (
     <header className="relative flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-surface px-6 z-40">
@@ -129,50 +88,36 @@ export default function Navbar({ onLogout }) {
         />
       </div>
 
-      {/* Right: Flashlight Dark Mode Controls */}
+      {/* Right: Tactile Physical Light Switch & Status */}
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleLabelClick}
-          className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary hover:text-ink transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md px-1.5 py-1"
-          title={isFlashlight ? 'Switch to daylight view' : 'Toggle flashlight dark mode'}
+        <div
+          className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary"
+          title={isFlashlight ? 'Room lights are OFF (Flashlight active)' : 'Room lights are ON (Daylight view)'}
         >
           {isFlashlight ? (
             <>
               <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>Flashlight On</span>
+              <span>Flashlight Active</span>
             </>
           ) : (
             <>
-              <span className="flex h-2 w-2 rounded-full bg-ink-muted/40" />
-              <span>Flashlight Mode</span>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span>Daylight View</span>
             </>
           )}
-        </button>
+        </div>
 
-        <div
-          data-theme-toggle="true"
-          className="relative flex items-center justify-center overflow-visible"
-          style={{ width: '68px', height: '36px' }}
-        >
-          <sakuga-toggle
-            ref={toggleRef}
-            label={isFlashlight ? 'Switch to daylight view' : 'Toggle flashlight dark mode'}
-            style={{
-              margin: 0,
-              transform: 'scale(0.58)',
-              transformOrigin: 'center center',
-              display: 'block',
-            }}
-          />
+        <div data-theme-toggle="true" className="flex items-center">
+          <LightSwitch isFlashlight={isFlashlight} onToggle={toggleTheme} />
         </div>
 
         {onLogout && (
           <button
             type="button"
             onClick={onLogout}
-            className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink hover:bg-surface-subtle px-2.5 py-1.5 rounded-lg border border-border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            title="Log out of Unproductive OS"
+            title="Log out back to login screen"
+            aria-label="Log out"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white/80 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50/80 hover:text-red-600 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <svg
               className="h-3.5 w-3.5"
@@ -188,7 +133,7 @@ export default function Navbar({ onLogout }) {
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            <span className="hidden sm:inline">Logout</span>
+            <span className="hidden sm:inline">Log out</span>
           </button>
         )}
       </div>
