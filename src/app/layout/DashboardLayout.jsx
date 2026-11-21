@@ -5,6 +5,7 @@ import Doomscroll from '../../features/extras/Doomscroll';
 import { useTheme } from '../context/ThemeContext';
 import { useOpacity, DANCE_STOP_AT, DANCE_STEP } from '../context/OpacityContext';
 import DanceGate from '../../features/dance/DanceGate';
+import PowerNotice from '../../features/power/PowerNotice';
 import styles from './DashboardLayout.module.css';
 
 function canElementScrollVertically(target, boundary, deltaY) {
@@ -92,6 +93,7 @@ export default function DashboardLayout({ scrollable = true, onLogout, children 
       <Doomscroll />
 
       {isFlashlight && <FlashlightOverlay />}
+      <PowerNotice />
     </div>
   );
 }

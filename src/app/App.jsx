@@ -8,6 +8,7 @@ import RatingModalManager from '../features/rating/RatingModal';
 import LoginGate from '../features/captcha/LogicGate';
 import LoginPage from '../features/auth/LoginPage';
 import UnnecessaryVoid from '../features/extras/UnnecessaryVoid';
+import { usePower } from './context/PowerContext';
 
 function readHashAppId() {
   const raw = window.location.hash.replace(/^#\/?/, '').trim();
@@ -23,6 +24,7 @@ export default function App() {
       return 'login';
     }
   });
+  const { setPowerEnabled } = usePower();
   const [activeAppId, setActiveAppId] = useState(readHashAppId);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
 
@@ -33,6 +35,11 @@ export default function App() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Power cuts only happen while someone is signed in.
+  useEffect(() => {
+    setPowerEnabled(authStage === 'authenticated');
+  }, [authStage, setPowerEnabled]);
 
   const handleAuthenticated = () => {
     try {

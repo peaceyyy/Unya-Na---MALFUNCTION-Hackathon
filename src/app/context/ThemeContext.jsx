@@ -6,6 +6,8 @@ const ThemeContext = createContext({
   origin: null,
   toggleTheme: () => {},
   setTheme: () => {},
+  isLocked: false,
+  setThemeLocked: () => {},
 });
 
 export function ThemeProvider({ children }) {
@@ -19,9 +21,12 @@ export function ThemeProvider({ children }) {
   });
 
   const [origin, setOrigin] = useState(null);
+  // Locked during a power cut: the switch cannot change the theme until power returns.
+  const [locked, setThemeLocked] = useState(false);
   const isFlashlight = theme === 'flashlight';
 
   const toggleTheme = (coords) => {
+    if (locked) return;
     if (coords && typeof coords.x === 'number' && typeof coords.y === 'number') {
       setOrigin(coords);
     }
@@ -29,15 +34,16 @@ export function ThemeProvider({ children }) {
   };
 
   useEffect(() => {
+    if (locked) return; // a blackout is temporary, so it should not overwrite the saved choice
     try {
       localStorage.setItem('unproductive_theme', theme);
     } catch {
       // Ignore localStorage errors
     }
-  }, [theme]);
+  }, [theme, locked]);
 
   return (
-    <ThemeContext.Provider value={{ theme, isFlashlight, origin, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, isFlashlight, origin, toggleTheme, setTheme, isLocked: locked, setThemeLocked }}>
       {children}
     </ThemeContext.Provider>
   );
