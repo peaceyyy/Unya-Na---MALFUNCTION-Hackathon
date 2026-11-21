@@ -1,6 +1,7 @@
 import AztecCalendar from '../features/calendar/AztecCalendar';
 import AutocorrectNotepad from '../features/notepad/AutocorrectNotepad';
 import Clock from '../features/clock/Clock.jsx';
+import ReverseEisenhower from '../features/tasks/ReverseEisenhower';
 
 // Central launcher registry for Unya na home screen cards.
 // Teammates implement their components in src/features/* on their branches;
@@ -33,7 +34,7 @@ export const APP_REGISTRY = [
     category: 'Tasks',
     tone: 'indigo',
     featurePath: 'src/features/tasks/ReverseEisenhower.jsx',
-    component: null,
+    component: ReverseEisenhower,
   },
   {
     id: 'reverse-pomodoro',
