@@ -11,7 +11,7 @@ function formatDuration(totalSeconds) {
   return `${h}:${m}:${s}`;
 }
 
-export default function Navbar() {
+export default function Navbar({ onLogout }) {
   const { isFlashlight, toggleTheme } = useTheme();
   const { opacity } = useOpacity();
   const [idleSeconds, setIdleSeconds] = useState(0);
@@ -110,6 +110,32 @@ export default function Navbar() {
         <div data-theme-toggle="true" className="flex items-center">
           <LightSwitch isFlashlight={isFlashlight} onToggle={toggleTheme} />
         </div>
+
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            title="Log out back to login screen"
+            aria-label="Log out"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white/80 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50/80 hover:text-red-600 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="hidden md:inline">Log out</span>
+          </button>
+        )}
       </div>
     </header>
   );
