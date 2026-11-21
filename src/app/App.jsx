@@ -7,6 +7,7 @@ import DemotivationalQuote from '../features/quotes/DemotivationalQuote';
 import RatingModalManager from '../features/rating/RatingModal';
 import LoginGate from '../features/captcha/LogicGate';
 import LoginPage from '../features/auth/LoginPage';
+import UnnecessaryVoid from '../features/extras/UnnecessaryVoid';
 import { usePower } from './context/PowerContext';
 
 function readHashAppId() {
@@ -203,6 +204,9 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        {/* The Unnecessary Void: 12,000px+ easter egg corridor */}
+        <UnnecessaryVoid onOpenRating={() => setIsRatingOpen(true)} />
       </DashboardLayout>
 
       {/* Five-Star Rating Modal Manager (rendered outside horizontal scroll container) */}
