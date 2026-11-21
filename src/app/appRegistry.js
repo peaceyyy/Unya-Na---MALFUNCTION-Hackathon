@@ -2,6 +2,8 @@
 // Teammates implement their components in src/features/* on their branches;
 // once merged, import the component here and assign it to `component`.
 
+import ReverseEisenhower from '../features/tasks/ReverseEisenhower';
+
 export const APP_REGISTRY = [
 
     {
@@ -35,11 +37,11 @@ export const APP_REGISTRY = [
   {
     id: 'reverse-eisenhower',
     title: 'Eisenhower Matrix',
-    tagline: 'Prioritize the least urgent, least important work first.',
+    tagline: 'Sort your tasks by what is urgent and what is important.',
     category: 'Tasks',
     tone: 'indigo',
     featurePath: 'src/features/tasks/ReverseEisenhower.jsx',
-    component: null,
+    component: ReverseEisenhower,
   },
   {
     id: 'reverse-pomodoro',
