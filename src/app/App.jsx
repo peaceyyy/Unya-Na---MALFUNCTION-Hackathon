@@ -96,10 +96,6 @@ export default function App() {
         >
           <DemotivationalQuote />
           <YesterdayWeather />
-
-          <p className="text-xs text-ink-muted">
-            Scroll sideways to browse apps →
-          </p>
         </section>
 
         {/* Main Horizontal Track: Single-row Apps */}
@@ -157,10 +153,6 @@ export default function App() {
             >
               Rate your experience
             </button>
-
-            <div className="text-xs font-semibold text-accent pt-1">
-              ← Scroll back whenever you like
-            </div>
           </div>
         </section>
       </DashboardLayout>
