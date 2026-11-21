@@ -10,7 +10,7 @@ function formatDuration(totalSeconds) {
   return `${h}:${m}:${s}`;
 }
 
-export default function Navbar() {
+export default function Navbar({ onLogout }) {
   const { isFlashlight, toggleTheme } = useTheme();
   const { opacity } = useOpacity();
   const [idleSeconds, setIdleSeconds] = useState(0);
@@ -166,6 +166,31 @@ export default function Navbar() {
             }}
           />
         </div>
+
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink hover:bg-surface-subtle px-2.5 py-1.5 rounded-lg border border-border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            title="Log out of Unproductive OS"
+          >
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+        )}
       </div>
     </header>
   );

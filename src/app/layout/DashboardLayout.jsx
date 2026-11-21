@@ -25,7 +25,7 @@ function canElementScrollVertically(target, boundary, deltaY) {
   return false;
 }
 
-export default function DashboardLayout({ scrollable = true, children }) {
+export default function DashboardLayout({ scrollable = true, onLogout, children }) {
   const containerRef = useRef(null);
   const { isFlashlight } = useTheme();
   const { opacity, resetOpacity } = useOpacity();
@@ -57,7 +57,7 @@ export default function DashboardLayout({ scrollable = true, children }) {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-canvas text-ink relative">
-      <Navbar />
+      <Navbar onLogout={onLogout} />
 
       {scrollable ? (
         <main

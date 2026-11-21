@@ -5,6 +5,8 @@ import { APP_REGISTRY, getAppById } from './appRegistry';
 import YesterdayWeather from '../features/extras/YesterdayWeather';
 import DemotivationalQuote from '../features/quotes/DemotivationalQuote';
 import RatingModalManager from '../features/rating/RatingModal';
+import LoginGate from '../features/captcha/LogicGate';
+import LoginPage from '../features/auth/LoginPage';
 
 function readHashAppId() {
   const raw = window.location.hash.replace(/^#\/?/, '').trim();
@@ -12,6 +14,14 @@ function readHashAppId() {
 }
 
 export default function App() {
+  // Authentication stages: 'login' | 'captcha' | 'authenticated'
+  const [authStage, setAuthStage] = useState(() => {
+    try {
+      return sessionStorage.getItem('unproductive_auth') === 'true' ? 'authenticated' : 'login';
+    } catch {
+      return 'login';
+    }
+  });
   const [activeAppId, setActiveAppId] = useState(readHashAppId);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
 
@@ -23,13 +33,36 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const handleAuthenticated = () => {
+    try {
+      sessionStorage.setItem('unproductive_auth', 'true');
+    } catch {}
+    setAuthStage('authenticated');
+  };
+
+  const handleLogout = () => {
+    try {
+      sessionStorage.removeItem('unproductive_auth');
+      localStorage.removeItem('unproductive_auth');
+    } catch {}
+    setAuthStage('login');
+  };
+
+  if (authStage === 'login') {
+    return <LoginPage onLogin={() => setAuthStage('captcha')} />;
+  }
+
+  if (authStage === 'captcha') {
+    return <LoginGate onLogin={handleAuthenticated} onBack={() => setAuthStage('login')} />;
+  }
+
   const activeApp = activeAppId ? getAppById(activeAppId) : null;
 
   if (activeApp) {
     const FeatureComponent = activeApp.component;
 
     return (
-      <DashboardLayout scrollable={false}>
+      <DashboardLayout scrollable={false} onLogout={handleLogout}>
         <div className="flex flex-1 flex-col px-6 py-6 md:px-10">
           <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-4">
@@ -87,7 +120,7 @@ export default function App() {
 
   return (
     <>
-      <DashboardLayout scrollable={true}>
+      <DashboardLayout scrollable={true} onLogout={handleLogout}>
         <h1 className="sr-only">Unya na Dashboard</h1>
         {/* Far-left Column: Daily Demotivational Quote + Yesterday's Weather */}
         <section
