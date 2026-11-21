@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useOpacity, DANCE_STOP_AT, DANCE_STEP } from '../context/OpacityContext';
 import DanceGate from '../../features/dance/DanceGate';
 import PowerNotice from '../../features/power/PowerNotice';
+import LazyAssistant from '../../features/assistant/LazyAssistant';
 import styles from './DashboardLayout.module.css';
 
 function canElementScrollVertically(target, boundary, deltaY) {
@@ -91,6 +92,9 @@ export default function DashboardLayout({ scrollable = true, onLogout, children 
 
       {/* Persistent Bottom-Right Doomscroll Corner */}
       <Doomscroll />
+
+      {/* Lazy local assistant (Ollama), just left of the Doomscroll corner */}
+      <LazyAssistant />
 
       {isFlashlight && <FlashlightOverlay />}
       <PowerNotice />
