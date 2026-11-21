@@ -441,23 +441,36 @@
 .fightButton {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: 120px !important;
+  height: 38px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  box-sizing: border-box !important;
   border: 2px solid #ef4444;
   background-color: #000000;
   color: #ffffff;
   font-family: monospace;
   font-weight: 900;
   font-size: 13px;
-  padding: 6px 14px;
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transform: none !important;
 }
 
 .fightButton:hover {
   border-color: #facc15;
   color: #fef08a;
+  transform: none !important;
+}
+
+.fightButton:active {
+  transform: none !important;
 }
 
 .fightButtonVulnerable {
@@ -466,15 +479,14 @@
   background-color: rgba(14, 165, 233, 0.25) !important;
   box-shadow: 0 0 16px rgba(56, 189, 248, 0.9) !important;
   animation: vulnerableGlow 0.5s ease-in-out infinite alternate;
+  transform: none !important;
 }
 
 @keyframes vulnerableGlow {
   from {
-    transform: scale(1);
     box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
   }
   to {
-    transform: scale(1.06);
     box-shadow: 0 0 20px rgba(56, 189, 248, 1);
   }
 }

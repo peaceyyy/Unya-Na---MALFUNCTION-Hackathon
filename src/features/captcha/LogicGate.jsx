@@ -37,18 +37,12 @@ export default function LoginGate({ onLogin, onBack }) {
 
         {/* Terminal Header Branding */}
         <div className="text-center space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold text-accent shadow-2xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-            <span>UNPRODUCTIVE OS // SECURITY GATE</span>
+          <div>------------------
           </div>
 
           <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
             Prove You Are a Robot
           </h1>
-
-          <p className="text-xs text-ink-secondary max-w-xs leading-relaxed mx-auto">
-            Credentials verified. Checkpoint 1 of 2: Pass the Big Red Button's sub-millisecond reflex gate. Defeat its timing lock to face the Bouncer.
-          </p>
         </div>
 
         {/* Precision Timer Red Button CAPTCHA */}
