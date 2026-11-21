@@ -1,0 +1,591 @@
+/* ==========================================================================
+   THE BIG RED BUTTON BOUNCER // RETRO ARENA STYLES
+   Industrial high-voltage warning aesthetic with vibrant combat animations
+   ========================================================================== */
+
+.battleScreen {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #000000;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+  user-select: none;
+  position: relative;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.screenHurtFlash {
+  animation: hurtFlash 0.3s ease-out;
+}
+
+@keyframes hurtFlash {
+  0% {
+    background-color: rgba(239, 68, 68, 0.45);
+  }
+  100% {
+    background-color: #000000;
+  }
+}
+
+.battleWrapper {
+  width: 100%;
+  max-width: 660px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- 1. Boss Header --- */
+.bossHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+.bossTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.bossName {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+.bossLevel {
+  font-size: 11px;
+  color: #f59e0b;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bossHpContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hpLabel {
+  font-size: 11px;
+  font-weight: 900;
+  color: #facc15;
+  letter-spacing: 0.05em;
+}
+
+.hpBarBg {
+  width: 120px;
+  height: 14px;
+  background-color: #7f1d1d;
+  border: 1px solid #ffffff;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hpBarFill {
+  height: 100%;
+  background-color: #ef4444;
+  transition: width 0.25s ease-out;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+.hpNumbers {
+  font-size: 11px;
+  font-family: monospace;
+  color: #e2e8f0;
+  min-width: 40px;
+}
+
+/* --- 2. Boss Stage & Sprite --- */
+.bossStage {
+  position: relative;
+  height: 185px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.damagePopup {
+  position: absolute;
+  top: 10px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #facc15;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.9);
+  animation: popUp 0.8s ease-out forwards;
+  z-index: 25;
+}
+
+@keyframes popUp {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-16px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-32px) scale(1);
+  }
+}
+
+.slashOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.slashPath {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: slashDraw 0.4s ease-out forwards;
+}
+
+@keyframes slashDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.bossSprite {
+  transition: transform 0.15s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bossShake {
+  animation: spriteHurt 0.4s ease;
+}
+
+@keyframes spriteHurt {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-12px); }
+  40%, 80% { transform: translateX(12px); }
+}
+
+.bossDefeated {
+  opacity: 0.35;
+  filter: grayscale(1) blur(1px);
+  transform: translateY(14px) scale(0.95);
+  transition: all 1.5s ease;
+}
+
+/* Regular Red Button Boss (Identical to Captcha & Reference Image) */
+.regularButtonBezel {
+  width: 156px;
+  height: 156px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 45%, #f9f5ed 0%, #ebe3d3 65%, #d8cdb8 100%);
+  border: 3px solid #d5cbba;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.regularRedButton {
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #f87171 0%, #dc2626 48%, #991b1b 100%);
+  box-shadow: 0 10px 20px rgba(153, 27, 27, 0.4), 0 3px 6px rgba(0, 0, 0, 0.25),
+    inset 0 3px 6px rgba(255, 255, 255, 0.5), inset 0 -5px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.buttonLabelPress {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+}
+
+.buttonLabelTarget {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.buttonSlashing {
+  transform: scale(0.92) translateY(4px);
+  filter: brightness(1.2) contrast(1.1);
+  box-shadow: 0 2px 4px rgba(153, 27, 27, 0.4), inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.buttonVulnerablePulse {
+  animation: redButtonOverheat 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes redButtonOverheat {
+  from {
+    filter: brightness(1);
+    box-shadow: 0 10px 20px rgba(153, 27, 27, 0.4), 0 0 12px rgba(56, 189, 248, 0.4);
+  }
+  to {
+    filter: brightness(1.2);
+    box-shadow: 0 10px 24px rgba(239, 68, 68, 0.6), 0 0 24px rgba(56, 189, 248, 0.85);
+  }
+}
+
+.steamContainer {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  pointer-events: none;
+}
+
+.steamPuff {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  animation: steamRise 0.9s ease-out infinite alternate;
+}
+
+.steamLeft1 {
+  width: 14px;
+  height: 14px;
+  left: 10px;
+  top: 15px;
+}
+
+.steamLeft2 {
+  width: 10px;
+  height: 10px;
+  left: 24px;
+  top: 0px;
+  animation-delay: 0.15s;
+}
+
+.steamRight1 {
+  width: 14px;
+  height: 14px;
+  right: 10px;
+  top: 15px;
+}
+
+.steamRight2 {
+  width: 10px;
+  height: 10px;
+  right: 24px;
+  top: 0px;
+  animation-delay: 0.2s;
+}
+
+@keyframes steamRise {
+  from { transform: translateY(0); opacity: 0.7; }
+  to { transform: translateY(-12px); opacity: 0.15; }
+}
+
+/* --- 3. Dialogue Box --- */
+.dialogueBox {
+  width: 100%;
+  border: 4px solid #ffffff;
+  background-color: #000000;
+  padding: 14px 18px;
+  min-height: 82px;
+  box-sizing: border-box;
+  border-radius: 4px;
+}
+
+.dialogueText {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.asterisk {
+  color: #f59e0b;
+  font-weight: 900;
+  margin-right: 6px;
+}
+
+/* --- 4. Player Stats Bar --- */
+.playerInfoBar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 0 4px;
+  box-sizing: border-box;
+  letter-spacing: 0.05em;
+}
+
+.playerHpRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerHpBarBg {
+  width: 110px;
+  height: 14px;
+  background-color: #7f1d1d;
+  border: 1px solid #ffffff;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.playerHpBarFill {
+  height: 100%;
+  transition: width 0.2s ease-out, background-color 0.2s ease;
+}
+
+/* --- 5. Battle Arena --- */
+.arenaBox {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border: 4px solid #ffffff;
+  background-color: #000000;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 4px;
+  cursor: crosshair;
+}
+
+.arenaHurt {
+  border-color: #ef4444;
+  animation: arenaFlash 0.3s ease;
+}
+
+@keyframes arenaFlash {
+  0%, 100% { border-color: #ffffff; }
+  50% { border-color: #ef4444; }
+}
+
+/* 2D Hollow Wireframe Obstacles: Strictly no color, no texture */
+.hazardBarricade {
+  position: absolute;
+  background: transparent !important;
+  border: 2px solid #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.hazardLaserBeam {
+  position: absolute;
+  background: transparent !important;
+  border-top: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  border-left: none;
+  border-right: none;
+  box-shadow: none;
+  pointer-events: none;
+  animation: wireframeLaserBlink 0.15s ease infinite alternate;
+}
+
+@keyframes wireframeLaserBlink {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+.playerSoul {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 20;
+  user-select: none;
+}
+
+/* Dynamic Avoidant Fight Button */
+.fightButtonContainer {
+  position: absolute;
+  z-index: 30;
+  pointer-events: auto;
+  transition: left 0.1s ease-out, top 0.1s ease-out;
+}
+
+.fightButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid #ef4444;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: monospace;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+  transition: all 0.15s ease;
+}
+
+.fightButton:hover {
+  border-color: #facc15;
+  color: #fef08a;
+}
+
+.fightButtonVulnerable {
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+  background-color: rgba(14, 165, 233, 0.25) !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.9) !important;
+  animation: vulnerableGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes vulnerableGlow {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  }
+  to {
+    transform: scale(1.06);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 1);
+  }
+}
+
+.buttonDotIcon {
+  font-size: 13px;
+}
+
+/* Victory Overlay */
+.victoryOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.proceedButton {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 14px;
+  font-family: monospace;
+  padding: 14px 26px;
+  border-radius: 6px;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.8);
+  transition: all 0.15s ease;
+}
+
+.proceedButton:hover {
+  background-color: #dc2626;
+  transform: scale(1.04);
+}
+
+.proceedButton:active {
+  transform: scale(0.97);
+}
+
+/* Game Over Overlay */
+.gameOverOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 45;
+  padding: 16px;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.gameOverTitle {
+  font-size: 28px;
+  font-weight: 900;
+  color: #ef4444;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+.brokenHeartContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 22px;
+}
+
+.brokenHeartLeft {
+  display: inline-block;
+  transform: rotate(-15deg);
+}
+
+.brokenHeartRight {
+  display: inline-block;
+  transform: rotate(15deg);
+}
+
+.gameOverText {
+  font-size: 12px;
+  color: #cbd5e1;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.reviveButton {
+  margin-top: 6px;
+  border: 2px solid #ffffff;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: monospace;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reviveButton:hover {
+  background-color: #ffffff;
+  color: #000000;
+}
