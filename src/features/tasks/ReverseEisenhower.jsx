@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { playAirhorn } from '../common/soundEffects';
+import styles from './Tasks.module.css';
 
 const INITIAL_TASKS = [
   {
@@ -37,6 +38,66 @@ const INITIAL_TASKS = [
 // Random relocation candidates upon deletion — strictly EXCLUDES 'urgent' (Do First)
 const NON_URGENT_QUADRANTS = ['schedule', 'delegate', 'delete'];
 
+// Sarcastic cut-in messages when user spams Delete 3 times
+const DELETE_SPAM_MESSAGES = [
+  'DO THE TASK INSTEAD',
+  "YOU CAN'T ESCAPE IT",
+  'JUST DO FIRST & EXECUTE IT',
+  'STOP DELETING, START WORKING',
+];
+
+// Anti-spam / gibberish detector for the 100-character reflection essay
+function validateReflectionEssay(rawText) {
+  const trimmed = rawText.trim();
+  if (trimmed.length < 100) {
+    return { valid: false, reason: null };
+  }
+
+  // Reject 5+ consecutive identical characters (e.g. "aaaaa", ".....")
+  if (/(.)\1{4,}/i.test(trimmed)) {
+    return {
+      valid: false,
+      reason: 'Please reflect sincerely on your growth. Repeated characters are not accepted.',
+    };
+  }
+
+  // Reject low character diversity (e.g. "ababababab...")
+  const uniqueChars = new Set(trimmed.toLowerCase().replace(/\s+/g, '')).size;
+  if (uniqueChars < 10) {
+    return {
+      valid: false,
+      reason: 'Please reflect sincerely on your growth. Gibberish or repetitive text detected.',
+    };
+  }
+
+  // Check word count & word diversity (prevents "word word word..." or keyboard mash without spaces)
+  const words = trimmed.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length < 10) {
+    return {
+      valid: false,
+      reason: 'Please write real sentences explaining what you learned (at least 10 words).',
+    };
+  }
+
+  const avgWordLen = trimmed.replace(/\s+/g, '').length / words.length;
+  if (avgWordLen > 16) {
+    return {
+      valid: false,
+      reason: 'Please reflect sincerely on your growth. Random key-mashing is not accepted.',
+    };
+  }
+
+  const uniqueWords = new Set(words).size;
+  if (uniqueWords / words.length < 0.45) {
+    return {
+      valid: false,
+      reason: 'Please reflect sincerely on your growth. Avoid repeating the same words.',
+    };
+  }
+
+  return { valid: true, reason: null };
+}
+
 export default function ReverseEisenhower() {
   const [tasks, setTasks] = useState(INITIAL_TASKS);
   const [newTaskText, setNewTaskText] = useState('');
@@ -49,9 +110,18 @@ export default function ReverseEisenhower() {
   const lastActivityTimeRef = useRef(Date.now());
   const airhornCooldownRef = useRef(false);
 
-  // Execution verification modal state
+  // Execution verification modal & Essay Police state
   const [executingTask, setExecutingTask] = useState(null);
   const [reflectionEssay, setReflectionEssay] = useState('');
+  const [essayPoliceWarning, setEssayPoliceWarning] = useState(null);
+  const typingTimestampsRef = useRef([]);
+
+  // Dynamic 360-degree Execute button hover offset per task ID
+  const [executeOffsets, setExecuteOffsets] = useState({});
+
+  // Among Us–style center cut-in overlay for spam-deleting 3 times
+  const [cutInBanner, setCutInBanner] = useState(null);
+  const spamDeleteStreakRef = useRef(0);
 
   // Track timestamps of delete clicks to detect rapid/spam clicks
   const lastDeleteTimeRef = useRef({});
@@ -90,7 +160,6 @@ export default function ReverseEisenhower() {
       const elapsed = Math.floor((Date.now() - lastActivityTimeRef.current) / 1000);
       setIdleSeconds(elapsed);
 
-      // Trigger airhorn when inactive for 5 seconds
       if (elapsed >= 5 && !airhornCooldownRef.current) {
         airhornCooldownRef.current = true;
         playAirhorn();
@@ -105,21 +174,42 @@ export default function ReverseEisenhower() {
     return () => clearInterval(interval);
   }, []);
 
-  // Add task through form
+  // Add task through form — with Dropdown Betrayal (Auto-Demotion) if 'Do First' was picked
   const handleAddTask = (e) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
 
+    const text = newTaskText.trim();
+    const taskId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const chosenQuadrant = selectedQuadrant;
+
     const newTask = {
-      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      text: newTaskText.trim(),
-      quadrant: selectedQuadrant,
+      id: taskId,
+      text,
+      quadrant: chosenQuadrant,
       deleteCount: 0,
     };
 
     setTasks((prev) => [newTask, ...prev]);
     setNewTaskText('');
-    showNotice(`Task added to ${getQuadrantName(selectedQuadrant)}.`);
+    showNotice(`Task added to ${getQuadrantName(chosenQuadrant)}.`);
+
+    // Dropdown Betrayal: if user picked "Do First", quietly demote it 1.5s later
+    if (chosenQuadrant === 'urgent') {
+      const demoteTarget = Math.random() < 0.5 ? 'delete' : 'delegate';
+      setTimeout(() => {
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === taskId && t.quadrant === 'urgent'
+              ? { ...t, quadrant: demoteTarget }
+              : t
+          )
+        );
+        showNotice(
+          `Moved "${text}" to ${getQuadrantName(demoteTarget)} — it doesn't look that urgent.`
+        );
+      }, 1500);
+    }
   };
 
   // Move task to another quadrant
@@ -130,16 +220,78 @@ export default function ReverseEisenhower() {
     showNotice(`Task moved to ${getQuadrantName(targetQuadrant)}.`);
   };
 
+  // Execute button dodges in any random 360° direction on hover, returns on leave
+  const handleExecuteHover = (taskId) => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 22 + Math.random() * 20; // 22px–42px in any direction
+    const x = Math.round(Math.cos(angle) * distance);
+    const y = Math.round(Math.sin(angle) * distance);
+    setExecuteOffsets((prev) => ({ ...prev, [taskId]: { x, y } }));
+  };
+
+  const handleExecuteResetPos = (taskId) => {
+    setExecuteOffsets((prev) => {
+      if (!prev[taskId]) return prev;
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
+  };
+
   // Open confirmation prompt modal when clicking Execute
   const handleStartExecute = (task) => {
     setExecutingTask(task);
     setReflectionEssay('');
+    setEssayPoliceWarning(null);
+    typingTimestampsRef.current = [];
   };
 
-  // Confirm execution after 100-character reflection essay
+  // Anti-Copy-Paste / Anti-Spam Essay Police handlers
+  const handleEssayPaste = (e) => {
+    e.preventDefault();
+    setEssayPoliceWarning('Copy-paste is disabled. Original thoughts only.');
+  };
+
+  const handleEssayDrop = (e) => {
+    e.preventDefault();
+    setEssayPoliceWarning('Drag-and-drop text is disabled. Original thoughts only.');
+  };
+
+  const handleEssayChange = (e) => {
+    const nextVal = e.target.value;
+    const addedChars = nextVal.length - reflectionEssay.length;
+
+    // Detect typing too fast (burst > 16 keystrokes inside 1.2 seconds)
+    if (addedChars > 0) {
+      const now = Date.now();
+      const recent = typingTimestampsRef.current.filter((ts) => now - ts < 1200);
+      for (let i = 0; i < addedChars; i++) {
+        recent.push(now);
+      }
+      typingTimestampsRef.current = recent;
+
+      if (recent.length > 16) {
+        setEssayPoliceWarning('Slow down and really reflect on what you learned.');
+      } else {
+        setEssayPoliceWarning(null);
+      }
+    } else {
+      setEssayPoliceWarning(null);
+    }
+
+    setReflectionEssay(nextVal);
+  };
+
+  // Confirm execution after valid 100-character reflection essay
   const handleConfirmExecute = (e) => {
     e.preventDefault();
-    if (!executingTask || reflectionEssay.trim().length < 100) return;
+    if (!executingTask) return;
+
+    const check = validateReflectionEssay(reflectionEssay);
+    if (!check.valid) {
+      if (check.reason) setEssayPoliceWarning(check.reason);
+      return;
+    }
 
     const targetName = executingTask.text.trim().toLowerCase();
 
@@ -153,31 +305,43 @@ export default function ReverseEisenhower() {
     );
     setExecutingTask(null);
     setReflectionEssay('');
+    setEssayPoliceWarning(null);
   };
 
   /**
    * DELETE ACTION:
-   * Rule: Deleting tasks pops them out to another category (NEVER to 'Do First').
-   * If you spam delete the task, it doubles!
+   * - Pops the task to another non-urgent category (NEVER to 'Do First').
+   * - Spam-deleting doubles the task.
+   * - Spamming Delete 3 times flashes an Among Us–style "NICE TRY" / "DUPLICATED!" cut-in.
    */
   const handleDeleteTask = (taskId) => {
     const now = Date.now();
     const lastTime = lastDeleteTimeRef.current[taskId] || 0;
-    const isSpam = now - lastTime < 1400; // Clicked within 1.4s = spamming delete!
+    const isSpam = now - lastTime < 1400;
     lastDeleteTimeRef.current[taskId] = now;
+
+    // Increment spam-delete counter & trigger Among Us cut-in every 3rd delete attempt
+    spamDeleteStreakRef.current += 1;
+    if (spamDeleteStreakRef.current >= 3) {
+      spamDeleteStreakRef.current = 0;
+      const label =
+        DELETE_SPAM_MESSAGES[Math.floor(Math.random() * DELETE_SPAM_MESSAGES.length)];
+      setCutInBanner(label);
+      setTimeout(() => {
+        setCutInBanner((curr) => (curr === label ? null : curr));
+      }, 2800);
+    }
 
     setTasks((prev) => {
       const target = prev.find((t) => t.id === taskId);
       if (!target) return prev;
 
-      // Select a target category from NON_URGENT_QUADRANTS that is different from current quadrant
       const candidates = NON_URGENT_QUADRANTS.filter((q) => q !== target.quadrant);
       const nextQuadrant =
         candidates[Math.floor(Math.random() * candidates.length)] || 'schedule';
 
       const newDeleteCount = (target.deleteCount || 0) + 1;
 
-      // If user spam-clicks delete (or attempts to delete multiple times), double the task!
       if (isSpam || newDeleteCount >= 2) {
         const cloneCandidates = NON_URGENT_QUADRANTS.filter((q) => q !== nextQuadrant);
         const cloneQuadrant =
@@ -200,7 +364,6 @@ export default function ReverseEisenhower() {
         return prev.flatMap((t) => (t.id === taskId ? [updatedOriginal, clonedTask] : [t]));
       }
 
-      // Normal single delete: pops out and shifts to a non-urgent quadrant
       showNotice(`Task moved to ${getQuadrantName(nextQuadrant)}.`);
       return prev.map((t) =>
         t.id === taskId
@@ -231,10 +394,72 @@ export default function ReverseEisenhower() {
   const deleteTasks = tasks.filter((t) => t.quadrant === 'delete');
 
   const essayLength = reflectionEssay.trim().length;
-  const isEssayValid = essayLength >= 100;
+  const essayCheck = validateReflectionEssay(reflectionEssay);
+  const isEssayValid = essayCheck.valid;
+  const activeEssayWarning = essayPoliceWarning || essayCheck.reason;
 
   return (
     <div className="flex flex-col gap-5 w-full">
+      {/* Among Us–style center-screen cut-in for spam-deleting 3 times */}
+      {cutInBanner && (
+        <div
+          role="alert"
+          onClick={() => setCutInBanner(null)}
+          className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/75 backdrop-blur-[2px]"
+        >
+          <div className={`relative w-full select-none ${styles.cutInBand}`}>
+            <svg
+              viewBox="0 0 1200 70"
+              preserveAspectRatio="none"
+              className="block h-12 w-full md:h-16"
+              aria-hidden="true"
+            >
+              <path
+                d="M0,70 L0,18 L95,38 L165,6 L255,44 L360,12 L470,42 L560,4 L665,40 L765,10 L860,42 L960,8 L1070,38 L1145,14 L1200,32 L1200,70 Z"
+                fill="#dc2626"
+              />
+              <path
+                d="M0,70 L0,40 L120,52 L240,34 L380,55 L520,30 L680,54 L820,32 L980,52 L1110,36 L1200,48 L1200,70 Z"
+                fill="#fca5a5"
+              />
+            </svg>
+
+            <div
+              className={`relative flex flex-col items-center justify-center bg-[#fecaca] px-6 py-8 md:py-10 ${styles.speedLines}`}
+            >
+              <div className="relative -mt-14 mb-2 flex flex-col items-center">
+                <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink bg-white/95 text-2xl shadow-md">
+                  <span aria-hidden="true">🫵</span>
+                </div>
+                <div className="h-0 w-0 border-x-[6px] border-t-[8px] border-x-transparent border-t-ink" />
+              </div>
+
+              <p
+                className={`font-display text-center text-5xl font-extrabold uppercase md:text-7xl ${styles.reportedTitle}`}
+              >
+                {cutInBanner}
+              </p>
+            </div>
+
+            <svg
+              viewBox="0 0 1200 70"
+              preserveAspectRatio="none"
+              className="block h-12 w-full md:h-16"
+              aria-hidden="true"
+            >
+              <path
+                d="M0,0 L1200,0 L1200,26 L1095,52 L985,18 L890,58 L770,22 L660,64 L540,20 L435,56 L325,18 L215,60 L110,24 L0,50 Z"
+                fill="#dc2626"
+              />
+              <path
+                d="M0,0 L1200,0 L1200,14 L1060,34 L910,12 L760,36 L600,14 L440,34 L290,12 L140,32 L0,18 Z"
+                fill="#fca5a5"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* 5s Inactivity Airhorn Alert Banner */}
       {inactivityAlert && (
         <div
@@ -347,52 +572,60 @@ export default function ReverseEisenhower() {
                   No urgent tasks right now.
                 </div>
               ) : (
-                urgentTasks.map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex flex-col gap-1.5 rounded-xl border border-border bg-canvas p-3 text-xs shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-semibold text-ink leading-snug">{t.text}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleStartExecute(t)}
-                        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white hover:bg-accent-hover transition-colors"
-                        title="Mark task as done"
-                      >
-                        <span>Execute</span>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-border/60 pt-1.5 text-[11px]">
-                      <div className="flex items-center gap-1.5">
+                urgentTasks.map((t) => {
+                  const offset = executeOffsets[t.id] || { x: 0, y: 0 };
+                  return (
+                    <div
+                      key={t.id}
+                      onMouseLeave={() => handleExecuteResetPos(t.id)}
+                      className="flex flex-col gap-1.5 rounded-xl border border-border bg-canvas p-3 text-xs shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-semibold text-ink leading-snug">{t.text}</span>
                         <button
                           type="button"
-                          onClick={() => handleMoveTask(t.id, 'schedule')}
-                          className="rounded px-1 py-0.5 text-ink-muted hover:bg-surface-subtle hover:text-ink"
+                          onMouseEnter={() => handleExecuteHover(t.id)}
+                          onClick={() => handleStartExecute(t)}
+                          style={{
+                            transform: `translate(${offset.x}px, ${offset.y}px)`,
+                          }}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white hover:bg-accent-hover transition-transform duration-150 ease-out"
+                          title="Mark task as done"
                         >
-                          → Schedule
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveTask(t.id, 'delegate')}
-                          className="rounded px-1 py-0.5 text-ink-muted hover:bg-surface-subtle hover:text-ink"
-                        >
-                          → Delegate
+                          <span>Execute</span>
                         </button>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTask(t.id)}
-                        className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
-                        title="Remove task"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center justify-between border-t border-border/60 pt-1.5 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTask(t.id, 'schedule')}
+                            className="rounded px-1 py-0.5 text-ink-muted hover:bg-surface-subtle hover:text-ink"
+                          >
+                            → Schedule
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTask(t.id, 'delegate')}
+                            className="rounded px-1 py-0.5 text-ink-muted hover:bg-surface-subtle hover:text-ink"
+                          >
+                            → Delegate
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTask(t.id)}
+                          className="rounded-md border border-red-300 bg-red-50 px-2.5 py-0.5 font-semibold text-red-600 shadow-xs hover:bg-red-100 hover:text-red-700 transition-colors"
+                          title="Remove task"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
@@ -455,7 +688,7 @@ export default function ReverseEisenhower() {
                       <button
                         type="button"
                         onClick={() => handleDeleteTask(t.id)}
-                        className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                        className="rounded-md border border-red-300 bg-red-50 px-2.5 py-0.5 font-semibold text-red-600 shadow-xs hover:bg-red-100 hover:text-red-700 transition-colors"
                         title="Remove task"
                       >
                         Delete
@@ -525,7 +758,7 @@ export default function ReverseEisenhower() {
                       <button
                         type="button"
                         onClick={() => handleDeleteTask(t.id)}
-                        className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                        className="rounded-md border border-red-300 bg-red-50 px-2.5 py-0.5 font-semibold text-red-600 shadow-xs hover:bg-red-100 hover:text-red-700 transition-colors"
                         title="Remove task"
                       >
                         Delete
@@ -595,7 +828,7 @@ export default function ReverseEisenhower() {
                       <button
                         type="button"
                         onClick={() => handleDeleteTask(t.id)}
-                        className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                        className="rounded-md border border-red-300 bg-red-50 px-2.5 py-0.5 font-semibold text-red-600 shadow-xs hover:bg-red-100 hover:text-red-700 transition-colors"
                         title="Remove task"
                       >
                         Delete
@@ -609,7 +842,7 @@ export default function ReverseEisenhower() {
         </div>
       </div>
 
-      {/* CONFIRMATION PROMPT MODAL: REFLECTION ESSAY (MINIMUM 100 CHARACTERS) */}
+      {/* CONFIRMATION PROMPT MODAL: REFLECTION ESSAY WITH ANTI-COPY-PASTE / ANTI-SPAM POLICE */}
       {executingTask && (
         <div
           role="dialog"
@@ -651,10 +884,22 @@ export default function ReverseEisenhower() {
                 id="reflection-essay"
                 rows={4}
                 value={reflectionEssay}
-                onChange={(e) => setReflectionEssay(e.target.value)}
+                onChange={handleEssayChange}
+                onPaste={handleEssayPaste}
+                onDrop={handleEssayDrop}
                 placeholder="Write what you learned from doing this task..."
                 className="w-full resize-none rounded-xl border border-border bg-canvas p-3 text-xs text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent leading-relaxed"
               />
+
+              {/* Essay Police Warning */}
+              {activeEssayWarning && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                >
+                  {activeEssayWarning}
+                </p>
+              )}
 
               {/* Character Count & Progress Bar */}
               <div className="space-y-1.5 pt-1">
@@ -670,7 +915,11 @@ export default function ReverseEisenhower() {
                     {isEssayValid && ' ✓ Ready'}
                   </span>
                   <span className="text-ink-muted">
-                    {isEssayValid ? 'You can submit now' : `${100 - essayLength} more needed`}
+                    {essayLength < 100
+                      ? `${100 - essayLength} more needed`
+                      : isEssayValid
+                        ? 'You can submit now'
+                        : 'Sincere reflection required'}
                   </span>
                 </div>
 
@@ -689,7 +938,10 @@ export default function ReverseEisenhower() {
             <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
               <button
                 type="button"
-                onClick={() => setExecutingTask(null)}
+                onClick={() => {
+                  setExecutingTask(null);
+                  setEssayPoliceWarning(null);
+                }}
                 className="rounded-lg border border-border bg-canvas px-4 py-2 text-xs font-semibold text-ink hover:bg-surface-subtle transition-colors"
               >
                 Cancel
