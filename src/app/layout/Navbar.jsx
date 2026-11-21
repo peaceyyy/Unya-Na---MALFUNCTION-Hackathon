@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import SakugaSlider from '../components/SakugaSlider';
 import LightSwitch from '../components/LightSwitch';
+import JustDanceButton from '../../features/dance/JustDanceButton';
 
 function formatDuration(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
@@ -90,6 +91,7 @@ export default function Navbar({ onLogout }) {
 
       {/* Right: Tactile Physical Light Switch & Status */}
       <div className="flex items-center gap-3">
+        <JustDanceButton />
         <div
           className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary"
           title={isFlashlight ? 'Room lights are OFF (Flashlight active)' : 'Room lights are ON (Daylight view)'}

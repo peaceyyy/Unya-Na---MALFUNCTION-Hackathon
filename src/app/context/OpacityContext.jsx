@@ -6,6 +6,10 @@ const OpacityContext = createContext({
   resetOpacity: () => {},
   isDecaying: false,
   isDraggingRef: { current: false },
+  danceRequired: false,
+  registerDance: () => {},
+  startDance: () => {},
+  finishDance: () => {},
 });
 
 // Decay configuration:
@@ -13,12 +17,22 @@ const OpacityContext = createContext({
 const DECAY_INTERVAL_MS = 1500; // 1.5 seconds per tick
 const DECAY_STEP = 1;           // -1% every 5 seconds
 
+// Dance recovery: once the interface has faded to 0 the user has to dance (upper
+// body, on camera) to bring it back. Each detected dance adds DANCE_STEP percent.
+// The dance screen stays up until the interface is back to 100%, but once it is at
+// DANCE_STOP_AT percent or more the user may press Done and carry on with what they have.
+export const DANCE_STEP = 20;
+export const DANCE_STOP_AT = 30;
+
 export function OpacityProvider({ children }) {
   const [opacity, setOpacityState] = useState(100);
   const isDraggingRef = useRef(false);
   const lastActivityRef = useRef(Date.now());
   const lastDecayTimeRef = useRef(Date.now());
   const [isDecaying, setIsDecaying] = useState(false);
+  const [danceRequired, setDanceRequired] = useState(false);
+  const danceRequiredRef = useRef(false);
+  danceRequiredRef.current = danceRequired;
 
   const setOpacity = useCallback((val) => {
     lastActivityRef.current = Date.now();
@@ -29,11 +43,41 @@ export function OpacityProvider({ children }) {
     });
   }, []);
 
+  const registerDance = useCallback((step = DANCE_STEP) => {
+    lastActivityRef.current = Date.now();
+    lastDecayTimeRef.current = Date.now();
+    setOpacityState((prev) => Math.min(100, prev + step));
+  }, []);
+
+  // The "Just dance" button: drop straight to 0% and put the dance screen up.
+  const startDance = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    lastDecayTimeRef.current = Date.now();
+    setOpacityState(0);
+    setDanceRequired(true);
+  }, []);
+
   const resetOpacity = useCallback(() => {
     lastActivityRef.current = Date.now();
     lastDecayTimeRef.current = Date.now();
     setOpacityState(100);
   }, []);
+
+  const opacityRef = useRef(100);
+  opacityRef.current = opacity;
+
+  // The user chose to stop dancing. Only allowed once enough has been won back.
+  const finishDance = useCallback(() => {
+    if (opacityRef.current < DANCE_STOP_AT) return;
+    lastDecayTimeRef.current = Date.now();
+    setDanceRequired(false);
+  }, []);
+
+  // Latch the dance screen on at 0% and off again at 100% (or when the user presses Done).
+  useEffect(() => {
+    if (opacity === 0) setDanceRequired(true);
+    else if (opacity >= 100) setDanceRequired(false);
+  }, [opacity]);
 
   useEffect(() => {
     const recordActivity = () => {
@@ -52,6 +96,12 @@ export function OpacityProvider({ children }) {
         lastActivityRef.current = Date.now();
         lastDecayTimeRef.current = Date.now();
         setIsDecaying(false);
+        return;
+      }
+
+      // No fading while the user is busy dancing it back.
+      if (danceRequiredRef.current) {
+        lastDecayTimeRef.current = Date.now();
         return;
       }
 
@@ -77,6 +127,10 @@ export function OpacityProvider({ children }) {
         resetOpacity,
         isDecaying,
         isDraggingRef,
+        danceRequired,
+        registerDance,
+        startDance,
+        finishDance,
       }}
     >
       {children}
