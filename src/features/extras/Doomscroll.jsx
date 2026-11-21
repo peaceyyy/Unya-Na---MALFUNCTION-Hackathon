@@ -65,7 +65,7 @@ export default function Doomscroll() {
   return (
     <aside
       ref={move.ref}
-      aria-label="Doomscroll Corner"
+      aria-label="Videos"
       className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-end select-none pointer-events-auto ${
         move.dragging ? '' : 'transition-all duration-300'
       } ${isOpen ? 'z-[60]' : 'z-40'}`}
@@ -155,9 +155,9 @@ export default function Doomscroll() {
       <div data-drag-handle="interactive" className="relative flex items-center justify-center">
         <sakuga-tooltip
           ref={tooltipRef}
-          text="Lock In"
-          label="Lock In"
-          title={isOpen ? 'Close Doomscroll' : 'Lock In Doomscroll'}
+          text={isOpen ? 'Close video player' : 'Open video player'}
+          label={isOpen ? 'Close video player' : 'Open video player'}
+          title={isOpen ? 'Close video player' : 'Open video player'}
           style={{
             margin: 0,
             display: 'inline-flex',

@@ -28,6 +28,7 @@ export default function App() {
   });
   const { setPowerEnabled } = usePower();
   const [activeAppId, setActiveAppId] = useState(readHashAppId);
+  const [expandedAppId, setExpandedAppId] = useState(null);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function App() {
                 <span>Home</span>
               </a>
               <div>
-                <h1 className="font-display text-2xl font-bold text-ink">
+                <h1 className="text-2xl font-semibold tracking-tight text-ink">
                   {activeApp.title}
                 </h1>
                 <p className="text-sm text-ink-secondary">{activeApp.tagline}</p>
@@ -118,19 +119,9 @@ export default function App() {
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <div className="max-w-md rounded-2xl border border-border bg-surface p-8 text-center space-y-3">
-                <span className="inline-block rounded-md bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
-                  Coming soon
-                </span>
-                <h2 className="font-display text-xl font-bold text-ink">
-                  {activeApp.title} is still being built
+                <h2 className="text-xl font-semibold text-ink">
+                  {activeApp.title} is unavailable
                 </h2>
-                <p className="text-sm leading-relaxed text-ink-secondary">
-                  This app slot is ready for integration. Once merged, wire{' '}
-                  <code className="rounded bg-surface-subtle px-1.5 py-0.5 text-xs text-ink">
-                    {activeApp.featurePath}
-                  </code>{' '}
-                  in <code className="rounded bg-surface-subtle px-1.5 py-0.5 text-xs text-ink">appRegistry.js</code>.
-                </p>
                 <div className="pt-2">
                   <a
                     href="#"
@@ -151,71 +142,47 @@ export default function App() {
     <>
       <DashboardLayout scrollable={true} onLogout={handleLogout}>
         <h1 className="sr-only">Unya na Dashboard</h1>
-        {/* Far-left Column: Daily Demotivational Quote + Yesterday's Weather */}
         <section
           aria-label="Daily overview"
-          className="grid h-full min-w-[380px] max-w-[420px] shrink-0 grid-rows-[minmax(0,1fr)_auto_auto] gap-5 border-r border-border bg-canvas px-7 py-7"
+          className="flex h-full w-[min(100%,23rem)] shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-canvas px-4 py-6 sm:px-6 sm:py-8"
         >
-          <DemotivationalQuote />
           <YesterdayWeather />
+          <DemotivationalQuote />
         </section>
 
-        {/* Main Horizontal Track: Single-row Apps */}
         <section
-          aria-label="Apps"
-          className="flex h-full shrink-0 flex-col justify-center gap-4 px-10 py-8"
+          aria-labelledby="dashboard-apps"
+          className="flex h-full shrink-0 flex-col overflow-y-auto px-[clamp(1.5rem,6vw,7rem)] py-4 sm:py-5"
         >
-          <div className="flex items-baseline justify-between">
-            <div>
-              <h2 className="font-display text-xl font-bold text-ink">Apps</h2>
-              <p className="text-sm text-ink-secondary">
-                Pick a tool. Ugma na ang uban.
-              </p>
+          <div className="my-auto space-y-4 py-1">
+            <h2 id="dashboard-apps" className="text-xl font-semibold tracking-tight text-ink">Apps</h2>
+            <div className="flex items-stretch border-l border-border">
+              {APP_REGISTRY.map((app) => (
+                <WidgetCard
+                  key={app.id}
+                  id={app.id}
+                  title={app.title}
+                  tagline={app.tagline}
+                  isReady={Boolean(app.component)}
+                  isExpanded={expandedAppId === app.id}
+                  onToggle={() => setExpandedAppId((current) => current === app.id ? null : app.id)}
+                />
+              ))}
             </div>
-            <span className="text-xs font-medium text-ink-muted">
-              {APP_REGISTRY.length} apps
-            </span>
-          </div>
-
-          <div className="flex flex-row items-stretch gap-5 pr-10">
-            {APP_REGISTRY.map((app) => (
-              <WidgetCard
-                key={app.id}
-                id={app.id}
-                title={app.title}
-                tagline={app.tagline}
-                category={app.category}
-                tone={app.tone}
-                isReady={Boolean(app.component)}
-              />
-            ))}
           </div>
         </section>
 
-        {/* End of the Line / Horizon */}
         <section
-          aria-label="End of the line"
-          className="flex h-full min-w-[320px] items-center justify-center p-8 shrink-0 text-center"
+          aria-label="Feedback"
+          className="flex h-full w-56 shrink-0 items-center px-6 sm:px-8"
         >
-          <div className="rounded-2xl border border-border bg-surface p-6 space-y-3.5 max-w-xs shadow-xs">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent font-bold">
-              ✓
-            </div>
-            <h3 className="text-sm font-bold text-ink">
-              End of the line
-            </h3>
-            <p className="text-xs text-ink-secondary leading-relaxed">
-              You reached the end without doing any work. Well done.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setIsRatingOpen(true)}
-              className="w-full rounded-xl bg-accent py-2.5 px-3 text-xs font-semibold text-white shadow-xs hover:bg-accent-hover active:scale-98 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              Rate your experience
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsRatingOpen(true)}
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-ink hover:border-border-strong hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:transition-colors"
+          >
+            Rate your experience
+          </button>
         </section>
 
         {/* The Unnecessary Void: 12,000px+ easter egg corridor */}

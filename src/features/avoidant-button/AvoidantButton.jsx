@@ -658,7 +658,7 @@ export default function UndertaleBossFight({ onVictory, onBack }) {
                 onClick={() => onVictory && onVictory()}
                 className={styles.proceedButton}
               >
-                ★ ENTER UNPRODUCTIVE DASHBOARD ★
+                ★ LET'S GO UNYA NA ★
               </button>
             </div>
           )}

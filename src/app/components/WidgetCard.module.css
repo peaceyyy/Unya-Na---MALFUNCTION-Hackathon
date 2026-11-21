@@ -1,7 +1,53 @@
 .card {
-  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+  min-block-size: max(17rem, calc(100dvh - 10rem));
 }
 
-.card:hover {
-  box-shadow: 0 8px 20px -8px rgba(24, 24, 27, 0.12);
+.trigger {
+  inline-size: max(7.5rem, 19vw);
+}
+
+.title {
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: clamp(1.5rem, 5.2dvh, 4.25rem);
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.panel {
+  --description-width: max(11.5rem, 34vw);
+  display: flex;
+  inline-size: 0;
+  overflow: clip;
+}
+
+.panel[data-expanded="true"] {
+  inline-size: var(--description-width);
+}
+
+.description {
+  flex: 0 0 var(--description-width);
+  opacity: 0;
+  transform: translateX(-0.5rem);
+}
+
+.panel[data-expanded="true"] .description {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    --panel-transition: 260ms cubic-bezier(0.25, 0.8, 0.3, 1);
+    transition: inline-size var(--panel-transition);
+  }
+
+  .description {
+    transition: opacity 180ms ease-out, transform var(--panel-transition);
+  }
 }

@@ -17,41 +17,32 @@ export default function DemotivationalQuote() {
   };
 
   return (
-    <article className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-[0_1px_2px_rgba(31,28,23,0.04)]">
-      <div className="flex items-center justify-between gap-3">
-        <span className="inline-block rounded-md bg-accent-indigo/10 px-2.5 py-1 text-xs font-medium text-accent-indigo">
-          Daily Demotivation
-        </span>
+    <details className="group shrink-0 rounded-xl border border-border bg-surface">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-5 [&::-webkit-details-marker]:hidden">
+        Daily quote
+        <svg className="size-4 text-ink-muted group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
 
+      <div className="space-y-4 border-t border-border p-4 sm:p-5">
+        <figure className="space-y-2" aria-live="polite">
+          <blockquote className="text-base font-medium leading-relaxed text-ink">
+            &ldquo;{quote.text}&rdquo;
+          </blockquote>
+          <figcaption className="text-sm text-ink-secondary">{quote.attribution}</figcaption>
+        </figure>
         <button
           type="button"
           onClick={handleNextQuote}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-canvas px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-border-strong hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:border-border-strong hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:transition-colors"
         >
-          <svg
-            className="h-3.5 w-3.5 text-accent"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-            <polyline points="21 3 21 9 15 9" />
+          <svg className="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 7v5h-5m5 0a8 8 0 1 0-2.3 5.7" />
           </svg>
-          <span></span>
+          Next quote
         </button>
       </div>
-
-      <blockquote className="font-display text-2xl font-bold leading-snug text-ink">
-        &ldquo;{quote.text}&rdquo;
-      </blockquote>
-
-      <p className="text-sm text-ink-secondary">
-        - {quote.attribution}
-      </p>
-    </article>
+    </details>
   );
 }

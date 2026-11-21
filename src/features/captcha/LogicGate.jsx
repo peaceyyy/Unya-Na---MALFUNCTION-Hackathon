@@ -35,40 +35,16 @@ export default function LoginGate({ onLogin, onBack }) {
           </div>
         )}
 
-        {/* Terminal Header Branding */}
-        <div className="text-center space-y-1.5">
-          <div>------------------
-          </div>
-
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
-            Prove You Are a Robot
-          </h1>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          Timing challenge
+        </h1>
 
         {/* Precision Timer Red Button CAPTCHA */}
         <div className="w-full flex justify-center drop-shadow-md">
           <Captcha onVerifySuccess={onLogin} />
         </div>
 
-        {/* Terminal Footer Telemetry */}
-        <div className="flex items-center justify-between w-full text-xs text-ink-muted border-t border-border pt-3 px-1">
-          <span className="inline-flex items-center gap-1.5">
-            <svg
-              className="h-3.5 w-3.5 text-amber-700"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span className="text-amber-800 font-mono font-medium text-[11px]">STATUS: LOCKED</span>
-          </span>
-
+        <div className="flex w-full justify-end px-1">
           <button
             type="button"
             onClick={onLogin}

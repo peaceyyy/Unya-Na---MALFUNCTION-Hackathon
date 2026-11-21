@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { useOpacity } from '../context/OpacityContext';
 import SakugaSlider from '../components/SakugaSlider';
-import LightSwitch from '../components/LightSwitch';
 import JustDanceButton from '../../features/dance/JustDanceButton';
-import { usePower } from '../context/PowerContext';
 import SakugaButton from '../components/SakugaButton';
 import { loadSakuga } from '../components/sakugaLoader';
 
@@ -16,9 +13,6 @@ function formatDuration(totalSeconds) {
 }
 
 export default function Navbar({ onLogout }) {
-  const { isFlashlight, toggleTheme, isLocked } = useTheme();
-  const { phase, utility } = usePower();
-
   useEffect(() => {
     loadSakuga('button');
   }, []);
@@ -70,7 +64,7 @@ export default function Navbar({ onLogout }) {
               <path d="M19 19h-6" strokeWidth="2" strokeDasharray="2 2" />
             </svg>
           </span>
-          <span className="font-display text-lg font-bold tracking-tight text-ink">
+          <span className="text-lg font-semibold tracking-tight text-ink">
             Unya na
           </span>
         </a>
@@ -81,7 +75,7 @@ export default function Navbar({ onLogout }) {
           className="hidden sm:flex items-center gap-1.5 text-xs text-ink-secondary"
           title="Resets whenever you move, click, or type"
         >
-          <span>Session inactivity:</span>
+          <span>Idle time</span>
           <span className="font-semibold text-ink tnum">
             {formatDuration(idleSeconds)}
           </span>
@@ -97,39 +91,8 @@ export default function Navbar({ onLogout }) {
         />
       </div>
 
-      {/* Right: Tactile Physical Light Switch & Status */}
       <div className="flex items-center gap-5">
         <JustDanceButton />
-        <div
-          className="hidden sm:flex items-center gap-2 text-xs font-medium text-ink-secondary"
-          title={isFlashlight ? 'Room lights are OFF (Flashlight active)' : 'Room lights are ON (Daylight view)'}
-        >
-          {phase === 'out' ? (
-            <>
-              <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <span>{utility} outage</span>
-            </>
-          ) : isFlashlight ? (
-            <>
-              <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>Flashlight Active</span>
-            </>
-          ) : (
-            <>
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Daylight View</span>
-            </>
-          )}
-        </div>
-
-        <div data-theme-toggle="true" className="flex items-center">
-          <LightSwitch
-            isFlashlight={isFlashlight}
-            onToggle={toggleTheme}
-            disabled={isLocked}
-            disabledReason={`No power. ${utility || 'The utility'} has to restore it first.`}
-          />
-        </div>
 
         {onLogout && (
           // The Sakuga button is taller than the navbar, so it is scaled down like the

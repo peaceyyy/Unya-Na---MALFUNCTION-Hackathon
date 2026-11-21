@@ -21,7 +21,7 @@ export default function Captcha({
 
   const [telemetry, setTelemetry] = useState({
     type: 'idle',
-    message: 'Turing Reverse Test: Prove you are a robot. Biological reaction times will fail.',
+    message: '',
   });
 
   const startTimeRef = useRef(null);
@@ -133,7 +133,7 @@ export default function Captcha({
 
     setTelemetry({
       type: 'error',
-      message: `HUMAN INDECISION TIMEOUT: Exceeded 5.00s limit! Target was ${targetTime.toFixed(1)}s. Humans are too slow. Resetting...`,
+      message: 'Time ran out. The timer will restart.',
     });
 
     if (onVerifyFailure) {
@@ -197,14 +197,9 @@ export default function Captcha({
       playTone(880, 0.15, 'triangle');
       safeTimeout(() => playTone(1320, 0.25, 'sine'), 120);
 
-      const signStr = diff > 0 ? '+' : '';
       setTelemetry({
         type: 'success',
-        message: `✓ ROBOTIC PRECISION CONFIRMED: Pressed at ${clickedAt.toFixed(
-          2
-        )}s (Target: ${targetTime.toFixed(1)}s, error: ${signStr}${diff.toFixed(
-          2
-        )}s). WAIT... A HUMAN TIMED THAT?! ALERT: Deploying Big Red Button Bouncer!`,
+        message: 'Target hit. Continuing to the next step.',
       });
 
       if (onVerifySuccess) {
@@ -217,20 +212,10 @@ export default function Captcha({
       setShaking(true);
       safeTimeout(() => setShaking(false), 450);
 
-      const tooEarly = diff < 0;
+      const timing = diff < 0 ? 'early' : 'late';
       setTelemetry({
         type: 'error',
-        message: tooEarly
-          ? `⚠️ HUMAN IMPRECISION: Pressed too early at ${clickedAt.toFixed(
-              2
-            )}s! Target was ${targetTime.toFixed(1)}s (${Math.abs(diff).toFixed(
-              2
-            )}s early). Human nervous system detected.`
-          : `⚠️ HUMAN IMPRECISION: Pressed too late at ${clickedAt.toFixed(
-              2
-            )}s! Target was ${targetTime.toFixed(1)}s (+${diff.toFixed(
-              2
-            )}s late). Reaction latency exceeds machine threshold.`,
+        message: `Target missed. You pressed ${timing} at ${clickedAt.toFixed(2)}s.`,
       });
 
       if (onVerifyFailure) {
@@ -259,7 +244,7 @@ export default function Captcha({
     safeTimeout(() => playTone(1320, 0.25, 'sine'), 120);
     setTelemetry({
       type: 'success',
-      message: '✓ OVERRIDE ACCEPTED: Alt + C pressed. Human fatigue acknowledged! Accessing next stage...',
+      message: 'Human verified. Continuing to the next step.',
     });
     if (onVerifySuccess) {
       safeTimeout(onVerifySuccess, 850);
@@ -294,24 +279,20 @@ export default function Captcha({
     startStopwatch(nextTarget);
     setTelemetry({
       type: 'idle',
-      message: `Stopwatch reset. Press red button at exactly ${nextTarget.toFixed(1)}s.`,
+      message: `Timer reset. New target: ${nextTarget.toFixed(1)}s.`,
     });
   };
 
   return (
     <div className={`${styles.container} ${className} ${shaking ? styles.shake : ''}`}>
-      {/* 1. Protocol Header */}
       <div className={styles.header}>
-        <div className={styles.headerTop}>
-          <span className={styles.protocolBadge}>Reverse Turing Protocol</span>
-          <span className={styles.rangeBadge}>0.0s – 5.0s</span>
-        </div>
-        <div className={styles.headerTitle}>Robotic Precision Gate</div>
+        <p className={styles.instructions}>
+          To pass as human, miss the target three times, then use the shortcut that appears.
+        </p>
 
-        {/* Target Callout Box */}
         <div className={styles.targetCallout}>
           <div className="flex flex-col">
-            <span className={styles.targetLabel}>Target Press Timestamp</span>
+            <span className={styles.targetLabel}>Target time</span>
             <span className={styles.targetTolerance}>
               Tolerance: &plusmn;{TOLERANCE.toFixed(2)}s
             </span>
@@ -348,25 +329,17 @@ export default function Captcha({
             onKeyDown={handleKeyDown}
             disabled={isSuccess || isVerifying}
             className={`${styles.redButton} ${isPressed ? styles.buttonPressed : ''}`}
-            aria-label={`Press at exactly ${targetTime.toFixed(1)} seconds`}
           >
-            <span>{isSuccess ? 'VERIFIED' : 'PRESS'}</span>
-            <span className={styles.buttonSubtext}>AT {targetTime.toFixed(1)}s</span>
+            {isSuccess ? 'Verified' : 'Stop timer'}
           </button>
         </div>
       </div>
 
       {/* 4. Alt + C Shortcut Override (Unlocked after 3 failed attempts) */}
       {failCount >= 3 && !isSuccess && (
-        <div className={styles.overrideSection} role="status" aria-live="polite">
-          <div className={styles.overrideHeader}>
-            <span className={styles.overrideTitle}>Human Fatigue Override</span>
-            <span className={styles.overrideSubtitle}>Failures: {failCount}</span>
-          </div>
-          <div className={styles.overrideInstruction}>
-            Press <kbd className={styles.kbdKey}>Alt</kbd> + <kbd className={styles.kbdKey}>C</kbd> to bypass this gate.
-          </div>
-        </div>
+        <p className={styles.overrideSection} role="status">
+          Press <kbd>Alt</kbd> + <kbd>C</kbd> to continue as human.
+        </p>
       )}
 
       {/* 5. Footer Controls */}
@@ -376,7 +349,7 @@ export default function Captcha({
             type="button"
             onClick={handleManualReset}
             className={styles.iconButton}
-            title="Reset stopwatch and re-roll target"
+            title="Reset timer and pick a new target"
             aria-label="Reset challenge"
           >
             <svg
@@ -394,74 +367,17 @@ export default function Captcha({
             </svg>
           </button>
         </div>
-        <span className={failCount >= 3 ? styles.failTag : styles.toleranceTag}>
-          {failCount >= 3
-            ? `OVERRIDE READY: ALT + C`
-            : failCount > 0
-            ? `FAILS: ${failCount} (3 unlocks bypass)`
-            : `WINDOW: ±${(TOLERANCE * 1000).toFixed(0)}ms`}
+        <span className={styles.attemptInfo}>
+          {failCount > 0 && failCount < 3 ? `${failCount} of 3 misses` : `${MAX_TIMER}-second limit`}
         </span>
       </div>
 
-      {/* 6. Telemetry Status */}
       <div
-        className={`${styles.telemetry} ${
-          telemetry.type === 'success'
-            ? styles.telemetrySuccess
-            : telemetry.type === 'error'
-            ? styles.telemetryError
-            : styles.telemetryIdle
-        }`}
+        className={telemetry.message ? styles.telemetry : 'sr-only'}
+        data-state={telemetry.type}
         role="status"
-        aria-live="polite"
       >
-        <span className={styles.telemetryIcon} aria-hidden="true">
-          {telemetry.type === 'success' ? (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-          ) : telemetry.type === 'error' ? (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          ) : (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          )}
-        </span>
-        <span className={styles.telemetryText}>{telemetry.message}</span>
+        {telemetry.message}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useClockSession, useReading } from './ClockSession.jsx';
-import { SECOND, formatDuration, hourglassPhase, sandProgress } from './clockTime.js';
+import { SECOND, formatDuration, hourglassPhase, sandProgress, timerReadoutRemaining } from './clockTime.js';
 import styles from './Clock.module.css';
 
 function Hourglass({ progress, moving, phase }) {
@@ -36,6 +36,9 @@ export default function Timer({ active }) {
     : timer?.remainingMs ?? (valid ? total * SECOND : 0);
   const phase = timer ? hourglassPhase(timer.durationMs, remaining) : 'draining';
   const progress = timer ? sandProgress(timer.durationMs, remaining, phase) : 0;
+  const displayedRemaining = timer
+    ? timerReadoutRemaining(timer.durationMs, remaining, phase)
+    : remaining;
 
   function submit(event) {
     event.preventDefault();
@@ -52,8 +55,8 @@ export default function Timer({ active }) {
           moving={running && remaining > 0}
           phase={phase}
         />
-        <output className={styles.readout} aria-live="off" aria-label="Time remaining">
-          {formatDuration(Math.ceil(remaining / SECOND))}
+        <output className={styles.readout} aria-live="off" aria-label="Timer display">
+          {formatDuration(Math.ceil(displayedRemaining / SECOND))}
         </output>
         <p className={styles.help} role="status">
           {running ? 'Running' : paused ? 'Paused' : timer ? 'Complete' : 'Ready'}

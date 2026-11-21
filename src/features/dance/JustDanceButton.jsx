@@ -19,10 +19,10 @@ export default function JustDanceButton() {
   return (
     <div
       className="relative flex h-9 w-[98px] shrink-0 items-center justify-end"
-      title="Opens your camera. Dance to bring the interface opacity up."
+      title="Uses your camera to restore interface visibility"
     >
       <div style={{ transform: `scale(${SCALE})`, transformOrigin: 'right center', flex: 'none' }}>
-        <SakugaButton onClick={startDance}>Just dance</SakugaButton>
+        <SakugaButton onClick={startDance}>Just Dance!</SakugaButton>
       </div>
     </div>
   );

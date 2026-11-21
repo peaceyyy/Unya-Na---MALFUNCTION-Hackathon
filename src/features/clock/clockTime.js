@@ -190,3 +190,8 @@ export function sandProgress(duration, remaining, phase = hourglassPhase(duratio
 
   return refillPoint + (1 - refillPoint) * ((finalDrainMs - remaining) / finalDrainMs);
 }
+
+export function timerReadoutRemaining(duration, remaining, phase = hourglassPhase(duration, remaining)) {
+  if (phase === 'draining') return remaining;
+  return duration * (1 - sandProgress(duration, remaining, phase));
+}
